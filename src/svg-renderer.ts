@@ -1,0 +1,53 @@
+import { contributionColor } from "./colors.js";
+import type { Cell, Point, SnakeState } from "./domain.js";
+
+export interface SvgOptions {
+  readonly cellSize?: number;
+  readonly gap?: number;
+  readonly background?: string;
+  readonly snakeColor?: string;
+}
+
+export function renderSvg(
+  cells: readonly Cell[],
+  snake: SnakeState,
+  columns: number,
+  rows: number,
+  options: SvgOptions = {}
+): string {
+  if (columns < 1 || rows < 1) {
+    throw new Error("SVG dimensions must be positive.");
+  }
+
+  const cellSize = options.cellSize ?? 12;
+  const gap = options.gap ?? 3;
+  const background = options.background ?? "#0d1117";
+  const snakeColor = options.snakeColor ?? "#f0f6fc";
+  const width = columns * (cellSize + gap) + gap;
+  const height = rows * (cellSize + gap) + gap;
+
+  const grid = cells.map((cell) => {
+    const x = gap + cell.x * (cellSize + gap);
+    const y = gap + cell.y * (cellSize + gap);
+    return `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="2" fill="${contributionColor(cell.level)}"/>`;
+  }).join("");
+
+  const snakeRects = snake.segments.map((segment, index) => {
+    const x = gap + segment.x * (cellSize + gap);
+    const y = gap + segment.y * (cellSize + gap);
+    const opacity = Math.max(0.45, 1 - index * 0.035);
+    return `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="3" fill="${snakeColor}" opacity="${opacity.toFixed(3)}"/>`;
+  }).join("");
+
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="GitHub contribution snake">`,
+    `<rect width="${width}" height="${height}" rx="8" fill="${background}"/>`,
+    grid,
+    snakeRects,
+    "</svg>"
+  ].join("");
+}
+
+export function moveRight(start: Point, count: number): Point {
+  return { x: start.x + count, y: start.y };
+}

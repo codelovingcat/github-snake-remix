@@ -1,0 +1,15 @@
+{
+  "name": "github-snake-remix",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A custom GitHub contribution snake animation built with TypeScript and SVG.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/tests/*.test.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "@types/node": "^24.5.2"
+  }
+}
