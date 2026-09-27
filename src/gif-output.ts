@@ -45,7 +45,7 @@ export async function renderAnimatedGif(
 
   await fs.mkdir(path.dirname(path.resolve(outputPath)), { recursive: true });
 
-  const encoder = new GIFEncoder(width, height, "octree", true);
+  const encoder = new GIFEncoder(width, height, "octree", false);
   encoder.setRepeat(repeat);
   encoder.setDelay(delay);
   encoder.setQuality(quality);
