@@ -22,20 +22,36 @@ const fixture: GitHubContributionCalendar = {
   ]
 };
 
-test("normalizes weeks into deterministic x/y coordinates", () => {
+test("normalizes every week into a deterministic seven-row grid", () => {
   const grid = normalizeContributionCalendar(fixture);
 
   assert.equal(grid.columns, 2);
   assert.equal(grid.rows, 7);
+  assert.equal(grid.cells.length, 14);
   assert.deepEqual(grid.cells[0], {
     x: 0, y: 0, level: 2, date: "2026-09-20", contributionCount: 2, color: "#006d32"
   });
-  assert.deepEqual(grid.cells[2], {
+  assert.deepEqual(grid.cells[7], {
     x: 1, y: 0, level: 3, date: "2026-09-27", contributionCount: 3, color: "#26a641"
   });
 });
 
-test("normalization preserves empty cells and contribution metadata", () => {
+test("fills missing weekdays with deterministic empty cells", () => {
+  const grid = normalizeContributionCalendar(fixture);
+
+  const empty = grid.cells.find((cell) => cell.x === 1 && cell.y === 6);
+  assert.ok(empty);
+  assert.deepEqual(empty, {
+    x: 1,
+    y: 6,
+    level: 0,
+    date: "2026-10-03",
+    contributionCount: 0,
+    color: "#161b22"
+  });
+});
+
+test("preserves returned contribution metadata", () => {
   const grid = normalizeContributionCalendar(fixture);
   const empty = grid.cells.find((cell) => cell.date === "2026-09-21");
 
