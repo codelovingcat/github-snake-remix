@@ -32,10 +32,14 @@ export function renderSvg(
   }).join("");
 
   const snakeRects = snake.segments.map((segment, index) => {
-    const x = gap + segment.position.x * (cellSize + gap);
-    const y = gap + segment.position.y * (cellSize + gap);
-    const opacity = Math.max(0.55, 1 - index * 0.025);
-    return `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="3" fill="${segment.color}" opacity="${opacity.toFixed(3)}"/>`;
+    const centerX = gap + segment.position.x * (cellSize + gap) + cellSize / 2;
+    const centerY = gap + segment.position.y * (cellSize + gap) + cellSize / 2;
+    const sizeRatio = Math.max(0.28, 1 - index * 0.11);
+    const size = cellSize * sizeRatio;
+    const x = centerX - size / 2;
+    const y = centerY - size / 2;
+    const radius = Math.max(1.5, size * 0.2);
+    return `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${size.toFixed(2)}" height="${size.toFixed(2)}" rx="${radius.toFixed(2)}" fill="${segment.color}"/>`;
   }).join("");
 
   return [
