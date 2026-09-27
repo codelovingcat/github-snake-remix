@@ -2,6 +2,8 @@ name: Generate GitHub Snake
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
   schedule:
     - cron: "17 3 * * 0"
 
@@ -24,10 +26,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
+
+      - name: Run tests
+        run: npm test
 
       - name: Generate snake
         env:
@@ -36,25 +40,24 @@ jobs:
         run: npm run generate
 
       - name: Publish generated artifact
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          mkdir -p output-branch
+
           if git ls-remote --exit-code --heads origin output >/dev/null 2>&1; then
             git fetch origin output
             git worktree add --detach output-branch origin/output
-            rm -f output-branch/snake.gif
           else
             git worktree add --detach output-branch
             git -C output-branch checkout --orphan output
             git -C output-branch rm -rf . >/dev/null 2>&1 || true
           fi
 
+          rm -f output-branch/snake.gif
           cp output/snake.gif output-branch/snake.gif
-          printf '%s\n' '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1" fill="#0d1117"/></svg>' > output-branch/README.svg
-          git -C output-branch add snake.gif README.svg
+          git -C output-branch add snake.gif
           git -C output-branch commit -m "chore: publish snake artifact" || true
           git -C output-branch push origin HEAD:output

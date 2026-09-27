@@ -1,11 +1,10 @@
-import { contributionColor } from "./colors.js";
 import type { Cell, Point, SnakeState } from "./domain.js";
+import { contributionColor } from "./colors.js";
 
 export interface SvgOptions {
   readonly cellSize?: number;
   readonly gap?: number;
   readonly background?: string;
-  readonly snakeColor?: string;
 }
 
 export function renderSvg(
@@ -22,7 +21,6 @@ export function renderSvg(
   const cellSize = options.cellSize ?? 12;
   const gap = options.gap ?? 3;
   const background = options.background ?? "#0d1117";
-  const snakeColor = options.snakeColor ?? "#f0f6fc";
   const width = columns * (cellSize + gap) + gap;
   const height = rows * (cellSize + gap) + gap;
 
@@ -33,10 +31,10 @@ export function renderSvg(
   }).join("");
 
   const snakeRects = snake.segments.map((segment, index) => {
-    const x = gap + segment.x * (cellSize + gap);
-    const y = gap + segment.y * (cellSize + gap);
-    const opacity = Math.max(0.45, 1 - index * 0.035);
-    return `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="3" fill="${snakeColor}" opacity="${opacity.toFixed(3)}"/>`;
+    const x = gap + segment.position.x * (cellSize + gap);
+    const y = gap + segment.position.y * (cellSize + gap);
+    const opacity = Math.max(0.55, 1 - index * 0.025);
+    return `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="3" fill="${segment.color}" opacity="${opacity.toFixed(3)}"/>`;
   }).join("");
 
   return [

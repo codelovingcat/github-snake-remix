@@ -1,35 +1,54 @@
 # 🐍 GitHub Snake Remix
 
-A custom GitHub contribution snake animation built from scratch with **TypeScript + SVG**.
+A custom GitHub contribution snake animation built from scratch with **TypeScript + SVG**, then encoded to an animated GIF for profile embedding.
 
 This project is intentionally independent from the original profile-repository snake and does **not** use Platane/snk.
 
-## Current architecture
+## How it works
 
 ```text
-Contribution data
+GitHub GraphQL
       ↓
-Domain model
+Contribution calendar
       ↓
-Snake engine
+Deterministic grid
       ↓
-SVG renderer
+Custom snake path
       ↓
-snake.svg
+Growth + contribution colors
+      ↓
+Animation timeline
+      ↓
+SVG frame renderer
+      ↓
+Animated GIF
+      ↓
+output/snake.gif
 ```
 
-The core engine is GitHub-agnostic. GitHub API access and GitHub Actions publishing will be added separately.
+## Visual rules
 
-## Contribution colors
+The snake grows by one segment when it consumes a non-empty contribution cell.
 
-Non-empty contribution levels use four green shades:
+Each new segment keeps the contribution intensity it consumed:
 
 - Level 1 → light green
 - Level 2 → medium green
 - Level 3 → dark green
 - Level 4 → deepest green
 
-Empty cells use a dark GitHub-style background.
+The background follows GitHub's dark visual style.
+
+## Quality guards
+
+The generator rejects:
+
+- empty animation timelines
+- runaway frame counts above 500
+- invalid GIF headers
+- missing/empty artifacts
+- GIFs larger than 1.5 MB
+- unreasonable output dimensions
 
 ## Local development
 
@@ -39,21 +58,26 @@ npm test
 npm run build
 ```
 
-## Design principles
+To generate against real GitHub data locally:
 
-- TypeScript with strict compiler settings.
-- Deterministic animation state.
-- SVG output rather than a browser-only animation.
-- No GitHub token in source code.
-- No dependency on the old profile repository.
-- Small, testable core before adding GitHub data and automation.
+```bash
+CONTRIBUTION_TOKEN=... npm run generate
+```
+
+Keep the token in your shell environment or a secret manager. Never commit it.
+
+## GitHub Action
+
+The workflow supports manual dispatch, weekly regeneration and regeneration after changes land on `main`.
+
+The contribution calendar is read with `CONTRIBUTION_TOKEN`. The workflow's built-in `GITHUB_TOKEN` is used only for publishing the generated artifact.
 
 ## Profile output
 
-The generated animation is published to the `output` branch by GitHub Actions.
+The generated public artifact is published to the `output` branch:
 
 ```html
 <img src="https://raw.githubusercontent.com/codelovingcat/github-snake-remix/output/snake.gif" alt="GitHub contribution snake" />
 ```
 
-Set the repository secret `CONTRIBUTION_TOKEN` before running the workflow.
+Set the repository secret `CONTRIBUTION_TOKEN` before the first generation run.
