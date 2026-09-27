@@ -1,7 +1,7 @@
 import { contributionColor } from "./colors.js";
 
 const SNAKE_START_COLOR = "#3b82f6";
-const SNAKE_COLOR_CYCLE = ["#3b82f6", "#8b5cf6", "#ec4899", "#f97316", "#22c55e", "#06b6d4"] as const;
+const SNAKE_COLOR_CYCLE = ["#3b82f6", "#ff3b30", "#ff9500", "#af52de", "#34c759", "#00c7be"] as const;
 import { isAdjacent, pointKey, type Cell, type Point } from "./domain.js";
 
 export interface SnakeSegment {
@@ -63,7 +63,7 @@ export class SnakeEngine {
 
     this.segments = [{
       position: { x: cell.x, y: cell.y },
-      color: SNAKE_COLOR_CYCLE[this.consumed.size % SNAKE_COLOR_CYCLE.length] as string,
+      color: SNAKE_COLOR_CYCLE[(this.consumed.size + 1) % SNAKE_COLOR_CYCLE.length] ?? SNAKE_START_COLOR,
       level: cell.level
     }, ...this.segments];
 
