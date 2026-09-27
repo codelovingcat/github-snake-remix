@@ -5,3 +5,4 @@ export * from "./svg-renderer.js";
 export * from "./github-contributions.js";
 export * from "./github-graphql.js";
 export * from "./contribution-grid.js";
+export * from "./snake-path.js";
