@@ -7,3 +7,4 @@ export * from "./github-graphql.js";
 export * from "./contribution-grid.js";
 export * from "./snake-path.js";
 export * from "./animation-timeline.js";
+export * from "./gif-output.js";
