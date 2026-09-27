@@ -37,6 +37,7 @@ jobs:
         env:
           CONTRIBUTION_TOKEN: ${{ secrets.CONTRIBUTION_TOKEN }}
           SNAKE_OUTPUT: output/snake.gif
+          SNAKE_MAX_BYTES: 5000000
         run: npm run generate
 
       - name: Publish generated artifact
