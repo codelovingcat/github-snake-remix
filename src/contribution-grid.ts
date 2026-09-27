@@ -1,4 +1,5 @@
 import type { Cell, ContributionLevel } from "./domain.js";
+import { contributionColor } from "./colors.js";
 import type { GitHubContributionCalendar, GitHubContributionDay } from "./github-contributions.js";
 
 export interface ContributionGridCell extends Cell {
@@ -13,18 +14,25 @@ export interface ContributionGrid {
   readonly cells: readonly ContributionGridCell[];
 }
 
+const GRID_ROWS = 7;
+
 export function normalizeContributionCalendar(calendar: GitHubContributionCalendar): ContributionGrid {
-  const days = calendar.weeks.flatMap((week) => week.days);
   const cells: ContributionGridCell[] = [];
 
   calendar.weeks.forEach((week, x) => {
-    week.days.forEach((day) => {
-      cells.push(toCell(day, x));
-    });
+    const daysByWeekday = new Map(week.days.map((day) => [day.weekday, day]));
+
+    for (let weekday = 0; weekday < GRID_ROWS; weekday += 1) {
+      const day = daysByWeekday.get(weekday);
+      cells.push(day ? toCell(day, x) : createEmptyCell(week.firstDay, x, weekday));
+    }
   });
 
-  const rows = Math.max(7, ...days.map((day) => day.weekday + 1));
-  return { columns: calendar.weeks.length, rows, cells };
+  return {
+    columns: calendar.weeks.length,
+    rows: GRID_ROWS,
+    cells
+  };
 }
 
 function toCell(day: GitHubContributionDay, x: number): ContributionGridCell {
@@ -36,4 +44,21 @@ function toCell(day: GitHubContributionDay, x: number): ContributionGridCell {
     contributionCount: day.contributionCount,
     color: day.color
   };
+}
+
+function createEmptyCell(firstDay: string, x: number, weekday: number): ContributionGridCell {
+  return {
+    x,
+    y: weekday,
+    level: 0,
+    date: addDays(firstDay, weekday),
+    contributionCount: 0,
+    color: contributionColor(0)
+  };
+}
+
+function addDays(date: string, days: number): string {
+  const value = new Date(`${date}T00:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
 }
