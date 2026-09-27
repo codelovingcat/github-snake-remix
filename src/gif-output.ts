@@ -1,10 +1,10 @@
 import fs from "node:fs/promises";
 import { createWriteStream } from "node:fs";
-import { Readable } from "node:stream";
 import GIFEncoder from "gif-encoder-2";
 import sharp from "sharp";
 import type { AnimationFrame } from "./animation-timeline.js";
 import { renderSvg } from "./svg-renderer.js";
+import { validateGifArtifact, validateAnimationFrameCount } from "./quality.js";
 
 export interface GifOptions {
   readonly width?: number;
@@ -12,6 +12,7 @@ export interface GifOptions {
   readonly delayMilliseconds?: number;
   readonly repeat?: number;
   readonly quality?: number;
+  readonly maxBytes?: number;
 }
 
 export async function renderAnimatedGif(
@@ -21,7 +22,11 @@ export async function renderAnimatedGif(
   outputPath: string,
   options: GifOptions = {}
 ): Promise<void> {
-  if (frames.length === 0) throw new Error("At least one animation frame is required.");
+  validateAnimationFrameCount(frames.length);
+
+  if (columns < 1 || rows < 1) {
+    throw new Error("GIF grid dimensions must be positive.");
+  }
 
   const cellSize = 12;
   const gap = 3;
@@ -31,9 +36,11 @@ export async function renderAnimatedGif(
   const repeat = options.repeat ?? 0;
   const quality = options.quality ?? 10;
 
-  if (width <= 0 || height <= 0 || delay <= 0 || quality < 1 || quality > 30) {
-    throw new Error("Invalid GIF output options.");
+  if (width <= 0 || height <= 0 || width > 1000 || height > 300 || delay <= 0 || quality < 1 || quality > 30) {
+    throw new Error("Invalid GIF output dimensions or encoding options.");
   }
+
+  await fs.mkdir(new URL(".", `file://${outputPath}`).pathname, { recursive: true });
 
   const encoder = new GIFEncoder(width, height);
   encoder.setRepeat(repeat);
@@ -42,27 +49,31 @@ export async function renderAnimatedGif(
 
   await new Promise<void>((resolve, reject) => {
     const output = createWriteStream(outputPath);
-    encoder.createReadStream().pipe(output);
     output.on("finish", resolve);
     output.on("error", reject);
-    encoder.start();
+
+    const stream = encoder.createReadStream();
+    stream.on("error", reject);
+    stream.pipe(output);
 
     void (async () => {
       try {
+        encoder.start();
+
         for (const frame of frames) {
           const svg = renderSvg(
-            frame.state.segments.map((segment) => ({
-              x: segment.position.x,
-              y: segment.position.y,
-              level: segment.level
-            })),
+            framesToCells(frame),
             frame.state,
             columns,
             rows
           );
-          const png = await sharp(Buffer.from(svg)).png().raw().toBuffer({ resolveWithObject: true });
+          const png = await sharp(Buffer.from(svg))
+            .png()
+            .raw()
+            .toBuffer({ resolveWithObject: true });
           encoder.addFrame(png.data);
         }
+
         encoder.finish();
       } catch (error) {
         encoder.abort();
@@ -70,14 +81,24 @@ export async function renderAnimatedGif(
       }
     })();
   });
+
+  await validateGifArtifact(outputPath, options.maxBytes);
+}
+
+function framesToCells(frame: AnimationFrame) {
+  return frame.state.segments.map((segment) => ({
+    x: segment.position.x,
+    y: segment.position.y,
+    level: segment.level
+  }));
 }
 
 export async function writeAnimatedGif(
   frames: readonly AnimationFrame[],
   columns: number,
   rows: number,
-  outputPath: string
+  outputPath: string,
+  options: GifOptions = {}
 ): Promise<void> {
-  await fs.mkdir(new URL(".", `file://${outputPath}`).pathname, { recursive: true }).catch(() => undefined);
-  await renderAnimatedGif(frames, columns, rows, outputPath);
+  await renderAnimatedGif(frames, columns, rows, outputPath, options);
 }
