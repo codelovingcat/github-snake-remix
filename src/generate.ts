@@ -18,7 +18,8 @@ const timeline = createAnimationTimeline(grid, { frameDurationMilliseconds: 90 }
 await renderAnimatedGif(timeline, grid.columns, grid.rows, outputPath, {
   delayMilliseconds: 90,
   repeat: 0,
-  quality: 10
+  quality: 10,
+  maxBytes: Number(process.env.SNAKE_MAX_BYTES ?? 1_500_000)
 }, grid.cells);
 
 console.log(`Generated snake artifact with ${timeline.length} frames.`);
