@@ -46,8 +46,10 @@ export function createAnimationTimeline(
     }
 
     const before = snake.state;
-    snake.moveTo(point);
-    const consumed = snake.consume(cell);
+    const consumed = cell.level > 0 && snake.consume(cell);
+    if (!consumed) {
+      snake.moveTo(point);
+    }
     const state = consumed ? snake.state : snake.state;
 
     frames.push({

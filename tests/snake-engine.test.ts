@@ -10,7 +10,11 @@ test("snake grows by exactly one segment when it consumes a contribution cell", 
 
   assert.equal(grew, true);
   assert.equal(snake.state.segments.length, 2);
-  assert.deepEqual(snake.state.segments[0], { x: 2, y: 0 });
+  assert.deepEqual(snake.state.segments[0], {
+    position: { x: 2, y: 0 },
+    color: "#39d353",
+    level: 4
+  });
 });
 
 test("the same contribution cell cannot be consumed twice", () => {
