@@ -19,6 +19,6 @@ await renderAnimatedGif(timeline, grid.columns, grid.rows, outputPath, {
   delayMilliseconds: 90,
   repeat: 0,
   quality: 10
-});
+}, grid.cells);
 
 console.log(`Generated snake artifact with ${timeline.length} frames.`);

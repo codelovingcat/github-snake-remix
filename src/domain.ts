@@ -11,11 +11,6 @@ export interface Point {
   readonly y: number;
 }
 
-export interface SnakeState {
-  readonly segments: readonly Point[];
-  readonly consumed: ReadonlySet<string>;
-}
-
 export function pointKey(point: Point): string {
   return `${point.x}:${point.y}`;
 }

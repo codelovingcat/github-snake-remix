@@ -3,6 +3,7 @@ import { createWriteStream } from "node:fs";
 import GIFEncoder from "gif-encoder-2";
 import sharp from "sharp";
 import type { AnimationFrame } from "./animation-timeline.js";
+import type { ContributionGridCell } from "./contribution-grid.js";
 import { renderSvg } from "./svg-renderer.js";
 import { validateGifArtifact, validateAnimationFrameCount } from "./quality.js";
 
@@ -20,7 +21,8 @@ export async function renderAnimatedGif(
   columns: number,
   rows: number,
   outputPath: string,
-  options: GifOptions = {}
+  options: GifOptions = {},
+  cells: readonly ContributionGridCell[] = []
 ): Promise<void> {
   validateAnimationFrameCount(frames.length);
 
@@ -62,7 +64,7 @@ export async function renderAnimatedGif(
 
         for (const frame of frames) {
           const svg = renderSvg(
-            framesToCells(frame),
+            cells,
             frame.state,
             columns,
             rows
@@ -85,20 +87,13 @@ export async function renderAnimatedGif(
   await validateGifArtifact(outputPath, options.maxBytes);
 }
 
-function framesToCells(frame: AnimationFrame) {
-  return frame.state.segments.map((segment) => ({
-    x: segment.position.x,
-    y: segment.position.y,
-    level: segment.level
-  }));
-}
-
 export async function writeAnimatedGif(
   frames: readonly AnimationFrame[],
   columns: number,
   rows: number,
   outputPath: string,
-  options: GifOptions = {}
+  options: GifOptions = {},
+  cells: readonly ContributionGridCell[] = []
 ): Promise<void> {
-  await renderAnimatedGif(frames, columns, rows, outputPath, options);
+  await renderAnimatedGif(frames, columns, rows, outputPath, options, cells);
 }

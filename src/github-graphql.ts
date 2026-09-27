@@ -65,7 +65,7 @@ export class GitHubGraphQlContributionProvider implements GitHubContributionProv
         "Content-Type": "application/json"
       },
       body: JSON.stringify({ query: QUERY }),
-      signal
+      ...(signal ? { signal } : {})
     });
 
     if (!response.ok) {

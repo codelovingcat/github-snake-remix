@@ -1,4 +1,5 @@
-import type { Cell, Point, SnakeState } from "./domain.js";
+import type { Cell, Point } from "./domain.js";
+import type { SnakeState } from "./snake-engine.js";
 import { contributionColor } from "./colors.js";
 
 export interface SvgOptions {
