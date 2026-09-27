@@ -17,11 +17,7 @@ export class SnakeEngine {
   private readonly consumed = new Set<string>();
 
   public constructor(start: Point) {
-    this.segments = [{
-      position: { ...start },
-      color: contributionColor(0),
-      level: 0
-    }];
+    this.segments = [{ position: { ...start }, color: contributionColor(0), level: 0 }];
   }
 
   public get state(): SnakeState {
@@ -41,7 +37,6 @@ export class SnakeEngine {
       throw new Error("Snake can only move to an adjacent cell.");
     }
 
-    const tail = this.segments[this.segments.length - 1];
     const nextSegment: SnakeSegment = {
       position: { ...next },
       color: head.color,
@@ -49,10 +44,6 @@ export class SnakeEngine {
     };
 
     this.segments = [nextSegment, ...this.segments.slice(0, -1)];
-
-    if (tail && this.segments.length > 1 && pointKey(tail.position) === pointKey(next)) {
-      throw new Error("Snake cannot move into its own body.");
-    }
   }
 
   public consume(cell: Cell): boolean {
