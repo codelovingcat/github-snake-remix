@@ -1,34 +1,55 @@
-import { isAdjacent, pointKey, type Cell, type Point, type SnakeState } from "./domain.js";
+import { contributionColor } from "./colors.js";
+import { isAdjacent, pointKey, type Cell, type Point } from "./domain.js";
+
+export interface SnakeSegment {
+  readonly position: Point;
+  readonly color: string;
+  readonly level: Cell["level"];
+}
+
+export interface SnakeState {
+  readonly segments: readonly SnakeSegment[];
+  readonly consumed: ReadonlySet<string>;
+}
 
 export class SnakeEngine {
-  private segments: Point[];
+  private segments: SnakeSegment[];
   private readonly consumed = new Set<string>();
 
   public constructor(start: Point) {
-    this.segments = [start];
+    this.segments = [{ position: { ...start }, color: contributionColor(0), level: 0 }];
   }
 
   public get state(): SnakeState {
     return {
-      segments: this.segments.map((segment) => ({ ...segment })),
+      segments: this.segments.map((segment) => ({
+        position: { ...segment.position },
+        color: segment.color,
+        level: segment.level
+      })),
       consumed: new Set(this.consumed)
     };
   }
 
   public moveTo(next: Point): void {
     const head = this.segments[0];
-    if (!head || !isAdjacent(head, next)) {
+    if (!head || !isAdjacent(head.position, next)) {
       throw new Error("Snake can only move to an adjacent cell.");
     }
 
-    this.segments.unshift({ ...next });
-    this.segments.pop();
+    const nextSegment: SnakeSegment = {
+      position: { ...next },
+      color: head.color,
+      level: head.level
+    };
+
+    this.segments = [nextSegment, ...this.segments.slice(0, -1)];
   }
 
   public consume(cell: Cell): boolean {
     const head = this.segments[0];
 
-    if (!head || cell.level === 0 || !isAdjacent(head, cell)) {
+    if (!head || cell.level === 0 || !isAdjacent(head.position, cell)) {
       return false;
     }
 
@@ -37,7 +58,12 @@ export class SnakeEngine {
       return false;
     }
 
-    this.segments.unshift({ x: cell.x, y: cell.y });
+    this.segments = [{
+      position: { x: cell.x, y: cell.y },
+      color: contributionColor(cell.level),
+      level: cell.level
+    }, ...this.segments];
+
     this.consumed.add(key);
     return true;
   }
