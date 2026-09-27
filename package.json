@@ -11,5 +11,9 @@
   "devDependencies": {
     "typescript": "^5.9.2",
     "@types/node": "^24.5.2"
+  },
+  "dependencies": {
+    "gif-encoder-2": "^1.0.5",
+    "sharp": "^0.34.3"
   }
 }
