@@ -12,7 +12,7 @@ test("snake grows by exactly one segment when it consumes a contribution cell", 
   assert.equal(snake.state.segments.length, 2);
   assert.deepEqual(snake.state.segments[0], {
     position: { x: 2, y: 0 },
-    color: "#ff3b30",
+    color: "#f472b6",
     level: 4
   });
 });

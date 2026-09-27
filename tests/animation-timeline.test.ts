@@ -28,11 +28,11 @@ test("a consumed contribution is recorded on the corresponding frame", () => {
 
   assert.equal(frames[1]?.consumedDate, "2026-09-21");
   assert.equal(frames[1]?.state.segments.length, 2);
-  assert.equal(frames[1]?.state.segments[0]?.color, "#ff3b30");
+  assert.equal(frames[1]?.state.segments[0]?.color, "#f472b6");
 
   assert.equal(frames[3]?.consumedDate, "2026-09-22");
   assert.equal(frames[3]?.state.segments.length, 3);
-  assert.equal(frames[3]?.state.segments[0]?.color, "#ff9500");
+  assert.equal(frames[3]?.state.segments[0]?.color, "#2dd4bf");
 });
 
 test("invalid frame duration is rejected", () => {
