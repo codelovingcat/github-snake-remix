@@ -1,4 +1,7 @@
 import { contributionColor } from "./colors.js";
+
+const SNAKE_START_COLOR = "#3b82f6";
+const SNAKE_COLOR_CYCLE = ["#3b82f6", "#8b5cf6", "#ec4899", "#f97316", "#22c55e", "#06b6d4"] as const;
 import { isAdjacent, pointKey, type Cell, type Point } from "./domain.js";
 
 export interface SnakeSegment {
@@ -17,7 +20,7 @@ export class SnakeEngine {
   private readonly consumed = new Set<string>();
 
   public constructor(start: Point) {
-    this.segments = [{ position: { ...start }, color: contributionColor(0), level: 0 }];
+    this.segments = [{ position: { ...start }, color: SNAKE_START_COLOR, level: 0 }];
   }
 
   public get state(): SnakeState {
@@ -60,7 +63,7 @@ export class SnakeEngine {
 
     this.segments = [{
       position: { x: cell.x, y: cell.y },
-      color: contributionColor(cell.level),
+      color: SNAKE_COLOR_CYCLE[this.consumed.size % SNAKE_COLOR_CYCLE.length],
       level: cell.level
     }, ...this.segments];
 
