@@ -9,6 +9,7 @@
     "test": "npm run build && node --test dist/tests/*.test.js"
   },
   "devDependencies": {
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "@types/node": "^24.5.2"
   }
 }
