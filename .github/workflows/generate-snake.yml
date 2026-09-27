@@ -8,12 +8,16 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: snake-output
+  cancel-in-progress: true
+
 jobs:
   generate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -31,9 +35,26 @@ jobs:
           SNAKE_OUTPUT: output/snake.gif
         run: npm run generate
 
-      - name: Upload generated artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: snake-gif
-          path: output/snake.gif
-          if-no-files-found: error
+      - name: Publish generated artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git ls-remote --exit-code --heads origin output >/dev/null 2>&1; then
+            git fetch origin output
+            git worktree add --detach output-branch origin/output
+            rm -f output-branch/snake.gif
+          else
+            git worktree add --detach output-branch
+            git -C output-branch checkout --orphan output
+            git -C output-branch rm -rf . >/dev/null 2>&1 || true
+          fi
+
+          cp output/snake.gif output-branch/snake.gif
+          printf '%s\n' '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1" fill="#0d1117"/></svg>' > output-branch/README.svg
+          git -C output-branch add snake.gif README.svg
+          git -C output-branch commit -m "chore: publish snake artifact" || true
+          git -C output-branch push origin HEAD:output
