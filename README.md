@@ -47,3 +47,13 @@ npm run build
 - No GitHub token in source code.
 - No dependency on the old profile repository.
 - Small, testable core before adding GitHub data and automation.
+
+## Profile output
+
+The generated animation is published to the `output` branch by GitHub Actions.
+
+```html
+<img src="https://raw.githubusercontent.com/codelovingcat/github-snake-remix/output/snake.gif" alt="GitHub contribution snake" />
+```
+
+Set the repository secret `CONTRIBUTION_TOKEN` before running the workflow.
