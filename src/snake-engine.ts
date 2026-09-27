@@ -63,7 +63,7 @@ export class SnakeEngine {
 
     this.segments = [{
       position: { x: cell.x, y: cell.y },
-      color: SNAKE_COLOR_CYCLE[this.consumed.size % SNAKE_COLOR_CYCLE.length] ?? SNAKE_START_COLOR,
+      color: SNAKE_COLOR_CYCLE[this.consumed.size % SNAKE_COLOR_CYCLE.length] as string,
       level: cell.level
     }, ...this.segments];
 
