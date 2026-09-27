@@ -1,7 +1,7 @@
 import { contributionColor } from "./colors.js";
 
 const SNAKE_START_COLOR = "#3b82f6";
-const SNAKE_COLOR_CYCLE = ["#3b82f6", "#ff3b30", "#ff9500", "#af52de", "#34c759", "#00c7be"] as const;
+const SNAKE_COLOR_CYCLE = ["#3b82f6", "#f472b6", "#2dd4bf", "#facc15", "#4ade80"] as const;
 import { isAdjacent, pointKey, type Cell, type Point } from "./domain.js";
 
 export interface SnakeSegment {
