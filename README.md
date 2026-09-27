@@ -15,7 +15,7 @@ Deterministic grid
       ↓
 Custom snake path
       ↓
-Growth + contribution colors
+Growth + snake color cycle
       ↓
 Animation timeline
       ↓
@@ -30,12 +30,17 @@ output/snake.gif
 
 The snake grows by one segment when it consumes a non-empty contribution cell.
 
-Each new segment keeps the contribution intensity it consumed:
+Each growth advances the snake through a fixed, deterministic color cycle:
 
-- Level 1 → light green
-- Level 2 → medium green
-- Level 3 → dark green
-- Level 4 → deepest green
+- Initial state → blue
+- 1st growth → soft pink
+- 2nd growth → turquoise
+- 3rd growth → yellow
+- 4th growth → green
+- 5th growth → blue
+- Then the cycle repeats.
+
+The contribution level still belongs to the consumed cell; it does not control the snake color.
 
 The background follows GitHub's dark visual style.
 
