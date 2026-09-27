@@ -6,11 +6,13 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test dist/tests/*.test.js"
+    "test": "npm run build && node --test dist/tests/*.test.js",
+    "generate": "tsx src/generate.ts"
   },
   "devDependencies": {
     "typescript": "^5.9.2",
-    "@types/node": "^24.5.2"
+    "@types/node": "^24.5.2",
+    "tsx": "^4.20.5"
   },
   "dependencies": {
     "gif-encoder-2": "^1.0.5",
