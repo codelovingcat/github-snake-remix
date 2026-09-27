@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import path from "node:path";
 import { createWriteStream } from "node:fs";
 import GIFEncoder from "gif-encoder-2";
 import sharp from "sharp";
@@ -42,7 +43,7 @@ export async function renderAnimatedGif(
     throw new Error("Invalid GIF output dimensions or encoding options.");
   }
 
-  await fs.mkdir(new URL(".", `file://${outputPath}`).pathname, { recursive: true });
+  await fs.mkdir(path.dirname(path.resolve(outputPath)), { recursive: true });
 
   const encoder = new GIFEncoder(width, height);
   encoder.setRepeat(repeat);
@@ -63,12 +64,7 @@ export async function renderAnimatedGif(
         encoder.start();
 
         for (const frame of frames) {
-          const svg = renderSvg(
-            cells,
-            frame.state,
-            columns,
-            rows
-          );
+          const svg = renderSvg(cells, frame.state, columns, rows);
           const png = await sharp(Buffer.from(svg))
             .png()
             .raw()
