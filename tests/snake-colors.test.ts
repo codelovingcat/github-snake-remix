@@ -23,12 +23,8 @@ test("three consecutive contributions advance through distinct snake colors", ()
 
   snake.moveTo({ x: 1, y: 0 });
   assert.equal(snake.consume({ x: 2, y: 0, level: 1 }), true);
-
-  snake.moveTo({ x: 3, y: 0 });
-  assert.equal(snake.consume({ x: 4, y: 0, level: 2 }), true);
-
-  snake.moveTo({ x: 5, y: 0 });
-  assert.equal(snake.consume({ x: 6, y: 0, level: 3 }), true);
+  assert.equal(snake.consume({ x: 3, y: 0, level: 2 }), true);
+  assert.equal(snake.consume({ x: 4, y: 0, level: 3 }), true);
 
   const colors = snake.state.segments.slice(0, 3).map((segment) => segment.color);
   assert.deepEqual(colors, ["#af52de", "#ff9500", "#ff3b30"]);
@@ -41,10 +37,8 @@ test("the body keeps historical colors after later contributions are consumed", 
   const snake = new SnakeEngine({ x: 0, y: 0 });
 
   snake.moveTo({ x: 1, y: 0 });
-  snake.consume({ x: 2, y: 0, level: 2 });
-
-  snake.moveTo({ x: 3, y: 0 });
-  snake.consume({ x: 4, y: 0, level: 3 });
+  assert.equal(snake.consume({ x: 2, y: 0, level: 2 }), true);
+  assert.equal(snake.consume({ x: 3, y: 0, level: 3 }), true);
 
   assert.deepEqual(
     snake.state.segments.slice(0, 3).map((segment) => segment.color),
