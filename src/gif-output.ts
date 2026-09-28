@@ -64,7 +64,7 @@ export async function renderAnimatedGif(
         encoder.start();
 
         for (const frame of frames) {
-          const svg = renderSvg(cells, frame.state, columns, rows);
+          const svg = renderSvg(cells, frame.state, columns, rows, frame.hearts ?? []);
           const png = await sharp(Buffer.from(svg))
             .png()
             .raw()

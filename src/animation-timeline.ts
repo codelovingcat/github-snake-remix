@@ -1,12 +1,22 @@
 import type { ContributionGrid } from "./contribution-grid.js";
 import { planSnakePath } from "./snake-path.js";
 import { SnakeEngine, type SnakeState } from "./snake-engine.js";
+import type { Point } from "./domain.js";
+
+const HEART_LIFETIME_FRAMES = 5;
+
+export interface HeartParticle {
+  readonly origin: Point;
+  readonly color: string;
+  readonly age: number;
+}
 
 export interface AnimationFrame {
   readonly index: number;
   readonly elapsedMilliseconds: number;
   readonly state: SnakeState;
   readonly consumedDate?: string;
+  readonly hearts?: readonly HeartParticle[];
 }
 
 export interface AnimationOptions {
@@ -30,10 +40,12 @@ export function createAnimationTimeline(
   }
 
   const snake = new SnakeEngine(first);
+  let hearts: HeartParticle[] = [];
   const frames: AnimationFrame[] = [{
     index: 0,
     elapsedMilliseconds: 0,
-    state: snake.state
+    state: snake.state,
+    hearts: []
   }];
 
   for (let index = 1; index < path.length; index += 1) {
@@ -45,17 +57,30 @@ export function createAnimationTimeline(
       throw new Error("Snake path references a missing contribution cell.");
     }
 
+    hearts = hearts
+      .map((heart) => ({ ...heart, age: heart.age + 1 }))
+      .filter((heart) => heart.age < HEART_LIFETIME_FRAMES);
+
     const before = snake.state;
     const consumed = cell.level > 0 && snake.consume(cell);
     if (!consumed) {
       snake.moveTo(point);
     }
-    const state = consumed ? snake.state : snake.state;
+    const state = snake.state;
+
+    if (consumed && state.segments[0]) {
+      hearts.push({
+        origin: { x: cell.x, y: cell.y },
+        color: state.segments[0].color,
+        age: 0
+      });
+    }
 
     frames.push({
       index: frames.length,
       elapsedMilliseconds: frames.length * duration,
       state,
+      hearts: hearts.map((heart) => ({ ...heart, origin: { ...heart.origin } })),
       ...(consumed && state.segments[0] && before.segments[0]
         ? { consumedDate: cell.date }
         : {})

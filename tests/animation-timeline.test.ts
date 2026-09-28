@@ -19,6 +19,7 @@ test("timeline is deterministic with explicit elapsed time", () => {
 
   assert.deepEqual(first, second);
   assert.equal(first.length, 4);
+  assert.deepEqual(first[0]?.hearts, []);
   assert.equal(first[1]?.elapsedMilliseconds, 100);
   assert.equal(first[2]?.elapsedMilliseconds, 200);
 });
@@ -31,12 +32,22 @@ test("a consumed contribution is recorded on the corresponding frame", () => {
   assert.equal(frames[1]?.consumedDate, "2026-09-21");
   assert.equal(frames[1]?.state.segments.length, 2);
   assert.equal(frames[1]?.state.segments[0]?.color, "#f472b6");
+  assert.equal(frames[1]?.hearts?.length, 1);
+  assert.deepEqual(frames[1]?.hearts?.[0], {
+    origin: { x: 0, y: 1 },
+    color: "#f472b6",
+    age: 0
+  });
 
   assert.equal(frames[2]?.consumedDate, undefined);
   assert.equal(frames[2]?.state.segments.length, 2);
+  assert.equal(frames[2]?.hearts?.length, 1);
+  assert.equal(frames[2]?.hearts?.[0]?.age, 1);
 
   assert.equal(frames[3]?.consumedDate, "2026-09-22");
   assert.equal(frames[3]?.state.segments.length, 3);
+  assert.equal(frames[3]?.hearts?.length, 2);
+  assert.deepEqual(frames[3]?.hearts?.map((heart) => heart.color), ["#f472b6", "#2dd4bf"]);
   assert.equal(frames[3]?.state.segments[0]?.color, "#2dd4bf");
 });
 

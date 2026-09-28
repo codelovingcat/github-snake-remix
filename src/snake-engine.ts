@@ -1,7 +1,18 @@
 import { isAdjacent, pointKey, type Cell, type Point } from "./domain.js";
 
 const SNAKE_START_COLOR = "#3b82f6";
-const SNAKE_COLOR_CYCLE = ["#3b82f6", "#f472b6", "#2dd4bf", "#facc15", "#4ade80"] as const;
+const SNAKE_COLOR_CYCLE = [
+  "#3b82f6", // blue
+  "#f472b6", // pink
+  "#2dd4bf", // turquoise
+  "#facc15", // yellow
+  "#4ade80", // green
+  "#a855f7", // purple
+  "#c084fc", // lilac
+  "#ef4444", // red
+  "#f9a8d4", // light pink
+  "#93c5fd"  // light blue
+] as const;
 
 export interface SnakeSegment {
   readonly position: Point;

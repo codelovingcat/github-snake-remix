@@ -27,6 +27,24 @@ test("keeps the consumed contribution cell visible but clears its green color", 
   assert.match(svg, /fill="#f472b6"/);
 });
 
+test("renders a heart in the snake color for a consumed contribution", () => {
+  const svg = renderSvg(
+    [{ x: 0, y: 0, level: 4 as const }],
+    {
+      segments: [{ position: { x: 0, y: 0 }, color: "#a855f7", level: 4 as const }],
+      consumed: new Set(["0:0"])
+    },
+    1,
+    1,
+    [{ origin: { x: 0, y: 0 }, color: "#a855f7", age: 0 }]
+  );
+
+  assert.match(
+    svg,
+    /data-heart="true"[^>]*fill="#a855f7"[^>]*opacity="1.00"/
+  );
+});
+
 test("keeps unconsumed contribution cells visible", () => {
   const svg = renderSvg(
     [{ x: 0, y: 0, level: 4 as const }],
