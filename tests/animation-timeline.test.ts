@@ -26,9 +26,14 @@ test("timeline is deterministic with explicit elapsed time", () => {
 test("a consumed contribution is recorded on the corresponding frame", () => {
   const frames = createAnimationTimeline(grid, { frameDurationMilliseconds: 80 });
 
+  // The deterministic serpentine path for this 2x2 grid is:
+  // (0,0) -> (0,1) -> (1,1) -> (1,0).
   assert.equal(frames[1]?.consumedDate, "2026-09-21");
   assert.equal(frames[1]?.state.segments.length, 2);
   assert.equal(frames[1]?.state.segments[0]?.color, "#f472b6");
+
+  assert.equal(frames[2]?.consumedDate, undefined);
+  assert.equal(frames[2]?.state.segments.length, 2);
 
   assert.equal(frames[3]?.consumedDate, "2026-09-22");
   assert.equal(frames[3]?.state.segments.length, 3);
