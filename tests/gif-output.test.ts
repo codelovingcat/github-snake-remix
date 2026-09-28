@@ -88,9 +88,9 @@ test("preserves different snake colors in different GIF frames", async () => {
   const centerX = 9;
   const centerY = 9;
 
-  assert.ok(pageHeight !== undefined);
-  assert.ok(width !== undefined);
+  assert.ok(width === 18);
   assert.ok(channels !== undefined);
+  assert.ok(pageHeight === 18);
 
   const pixelAt = (page: number): readonly [number, number, number] => {
     const offset = ((page * pageHeight + centerY) * width + centerX) * channels;
