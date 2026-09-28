@@ -52,12 +52,83 @@ function walkPath(
     visited.add(key);
     path.push(candidate.point);
 
-    if (walkPath(candidate.point, path, visited, columns, rows, random, totalCells)) {
-      return true;
+    if (!createsDeadEnd(candidate.point, visited, columns, rows, totalCells)) {
+      if (walkPath(candidate.point, path, visited, columns, rows, random, totalCells)) {
+        return true;
+      }
     }
 
     path.pop();
     visited.delete(key);
+  }
+
+  return false;
+}
+
+function createsDeadEnd(
+  current: Point,
+  visited: Set<string>,
+  columns: number,
+  rows: number,
+  totalCells: number
+): boolean {
+  if (visited.size === totalCells) {
+    return false;
+  }
+
+  const unvisited = totalCells - visited.size;
+
+  // The remaining unvisited cells must stay connected to the current head.
+  const reachable = new Set<string>([pointKey(current)]);
+  const queue: Point[] = [current];
+
+  while (queue.length > 0) {
+    const point = queue.pop();
+    if (!point) continue;
+
+    for (const neighbor of getAllNeighbors(point, columns, rows)) {
+      const key = pointKey(neighbor);
+      if (neighbor.x === current.x && neighbor.y === current.y) {
+        continue;
+      }
+
+      if (!visited.has(key) || key === pointKey(current)) {
+        if (!reachable.has(key)) {
+          reachable.add(key);
+          queue.push(neighbor);
+        }
+      }
+    }
+  }
+
+  if (reachable.size !== unvisited + 1) {
+    return true;
+  }
+
+  // More than one isolated degree-1 cell means the remaining path cannot
+  // be completed from the current head without revisiting a cell.
+  let deadEnds = 0;
+
+  for (let x = 0; x < columns; x += 1) {
+    for (let y = 0; y < rows; y += 1) {
+      const key = `${x}:${y}`;
+      if (visited.has(key)) continue;
+
+      const degree = getAllNeighbors({ x, y }, columns, rows)
+        .filter((neighbor) => !visited.has(pointKey(neighbor)) || pointKey(neighbor) === pointKey(current))
+        .length;
+
+      if (degree === 0) {
+        return true;
+      }
+
+      if (degree === 1) {
+        deadEnds += 1;
+        if (deadEnds > 1) {
+          return true;
+        }
+      }
+    }
   }
 
   return false;
@@ -69,6 +140,11 @@ function getUnvisitedNeighbors(
   columns: number,
   rows: number
 ): Point[] {
+  return getAllNeighbors(current, columns, rows)
+    .filter((point) => !visited.has(pointKey(point)));
+}
+
+function getAllNeighbors(current: Point, columns: number, rows: number): Point[] {
   const neighbors: Point[] = [];
 
   for (const direction of [
@@ -79,11 +155,7 @@ function getUnvisitedNeighbors(
   ]) {
     const next = { x: current.x + direction.x, y: current.y + direction.y };
 
-    if (next.x < 0 || next.x >= columns || next.y < 0 || next.y >= rows) {
-      continue;
-    }
-
-    if (!visited.has(pointKey(next))) {
+    if (next.x >= 0 && next.x < columns && next.y >= 0 && next.y < rows) {
       neighbors.push(next);
     }
   }
@@ -91,7 +163,12 @@ function getUnvisitedNeighbors(
   return neighbors;
 }
 
-function countUnvisitedNeighbors(point: Point, visited: Set<string>, columns: number, rows: number): number {
+function countUnvisitedNeighbors(
+  point: Point,
+  visited: Set<string>,
+  columns: number,
+  rows: number
+): number {
   return getUnvisitedNeighbors(point, visited, columns, rows).length;
 }
 
