@@ -54,8 +54,11 @@ export function createAnimationTimeline(
   }
 
   const second = path[1];
-  const initialPoints = second ? [first, second] : [first];
-  const snake = new SnakeEngine(first, second, initialPoints);
+  const initialGridCells = [first, second]
+    .filter((point): point is Point => point !== undefined)
+    .map((point) => byPoint.get(`${point.x}:${point.y}`))
+    .filter((cell): cell is ContributionGrid["cells"][number] => cell !== undefined && cell.level > 0);
+  const snake = new SnakeEngine(first, second, initialGridCells);
   const startIndex = second ? 2 : 1;
   let hearts: HeartParticle[] = [];
   const frames: AnimationFrame[] = [];

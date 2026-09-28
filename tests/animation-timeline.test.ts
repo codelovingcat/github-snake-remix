@@ -36,11 +36,11 @@ test("a consumed contribution pauses briefly, then grows without blinking", () =
   assert.equal(frames[consumedIndex - 1]?.delayMilliseconds, 160);
   assert.ok(frames.slice(0, consumedIndex).every((frame) => frame.snakeVisible !== false));
   assert.equal(frames[consumedIndex]?.state.segments.length, 3);
-  assert.equal(frames[7]?.state.segments[0]?.color, "#f472b6");
-  assert.equal(frames[7]?.hearts?.length, 1);
-  assert.deepEqual(frames[7]?.hearts?.[0], {
+  assert.equal(frames[consumedIndex]?.state.segments[0]?.color, "#2dd4bf");
+  assert.equal(frames[consumedIndex]?.hearts?.length, 1);
+  assert.deepEqual(frames[consumedIndex]?.hearts?.[0], {
     origin: { x: 0, y: 1 },
-    color: "#f472b6",
+    color: "#2dd4bf",
     age: 0
   });
 });
