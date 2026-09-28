@@ -9,9 +9,11 @@ export interface SvgOptions {
   readonly background?: string;
 }
 
-const HEART_RISE_PER_FRAME = 2;
+const HEART_RISE_PER_FRAME = 1.5;
 const HEART_OFFSET_FROM_CELL = 5;
-const HEART_OPACITY = [1, 0.85, 0.7, 0.5, 0.25] as const;
+const HEART_BASE_SCALE = 0.75;
+const HEART_GROWTH_PER_FRAME = 0.08;
+const HEART_OPACITY = [1, 1, 0.98, 0.9, 0.78, 0.62, 0.45, 0.25, 0.1] as const;
 
 export function renderSvg(
   cells: readonly Cell[],
@@ -57,7 +59,7 @@ export function renderSvg(
       - HEART_OFFSET_FROM_CELL
       - heart.age * HEART_RISE_PER_FRAME;
     const opacity = HEART_OPACITY[Math.min(heart.age, HEART_OPACITY.length - 1)] ?? 0;
-    const scale = cellSize / 14;
+    const scale = (cellSize / 14) * (HEART_BASE_SCALE + heart.age * HEART_GROWTH_PER_FRAME);
 
     return [
       `<path data-heart="true" d="M 0 7 C -10 0 -7 -8 0 -3 C 7 -8 10 0 0 7 Z" `,

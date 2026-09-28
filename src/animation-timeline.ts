@@ -3,7 +3,7 @@ import { planSnakePath } from "./snake-path.js";
 import { SnakeEngine, type SnakeState } from "./snake-engine.js";
 import type { Point } from "./domain.js";
 
-const HEART_LIFETIME_FRAMES = 5;
+const HEART_LIFETIME_FRAMES = 9;
 
 export interface HeartParticle {
   readonly origin: Point;
