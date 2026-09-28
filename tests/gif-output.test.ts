@@ -84,7 +84,7 @@ test("preserves different snake colors in different GIF frames", async () => {
 
   const width = info.width;
   const channels = info.channels;
-  const pageHeight = info.pageHeight;
+  const pageHeight = Number(info.pageHeight);
   const centerX = 9;
   const centerY = 9;
 
