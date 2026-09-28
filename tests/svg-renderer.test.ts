@@ -22,7 +22,7 @@ test("keeps the consumed contribution cell visible but clears its green color", 
   );
 
   assert.equal((svg.match(/fill="#39d353"/g) ?? []).length, 0);
-  assert.equal((svg.match(/fill="#161b22"/g) ?? []).length, 2);
+  assert.equal((svg.match(/fill="#161b22"/g) ?? []).length, 3);
   assert.match(svg, /x="18" y="3" width="12" height="12" rx="2" fill="#161b22"/);
   assert.match(svg, /fill="#f472b6"/);
 });
