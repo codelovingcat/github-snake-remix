@@ -25,7 +25,7 @@ export function renderSvg(
   const width = columns * (cellSize + gap) + gap;
   const height = rows * (cellSize + gap) + gap;
 
-  const grid = cells.map((cell) => {
+  const grid = cells.filter((cell) => !snake.consumed.has(`${cell.x}:${cell.y}`)).map((cell) => {
     const x = gap + cell.x * (cellSize + gap);
     const y = gap + cell.y * (cellSize + gap);
     return `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="2" fill="${contributionColor(cell.level)}"/>`;
