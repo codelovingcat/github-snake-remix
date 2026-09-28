@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderSvg } from "../src/svg-renderer.js";
 
-test("hides consumed contribution cells after the snake eats them", () => {
+test("keeps the consumed contribution cell visible but clears its green color", () => {
   const cells = [
     { x: 0, y: 0, level: 0 as const },
     { x: 1, y: 0, level: 4 as const }
@@ -22,6 +22,8 @@ test("hides consumed contribution cells after the snake eats them", () => {
   );
 
   assert.equal((svg.match(/fill="#39d353"/g) ?? []).length, 0);
+  assert.equal((svg.match(/fill="#161b22"/g) ?? []).length, 2);
+  assert.match(svg, /x="18" y="3" width="12" height="12" rx="2" fill="#161b22"/);
   assert.match(svg, /fill="#f472b6"/);
 });
 
