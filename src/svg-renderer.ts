@@ -25,10 +25,11 @@ export function renderSvg(
   const width = columns * (cellSize + gap) + gap;
   const height = rows * (cellSize + gap) + gap;
 
-  const grid = cells.filter((cell) => !snake.consumed.has(`${cell.x}:${cell.y}`)).map((cell) => {
+  const grid = cells.map((cell) => {
     const x = gap + cell.x * (cellSize + gap);
     const y = gap + cell.y * (cellSize + gap);
-    return `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="2" fill="${contributionColor(cell.level)}"/>`;
+    const level = snake.consumed.has(`${cell.x}:${cell.y}`) ? 0 : cell.level;
+    return `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="2" fill="${contributionColor(level)}"/>`;
   }).join("");
 
   const snakeRects = snake.segments.map((segment, index) => {
