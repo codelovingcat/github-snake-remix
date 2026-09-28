@@ -26,7 +26,7 @@ test("timeline is deterministic with explicit seed and always starts from the fi
 });
 
 test("a consumed contribution pauses briefly, then grows without blinking", () => {
-  const frames = createAnimationTimeline(grid, { frameDurationMilliseconds: 80, pathSeed: 1 });
+  const frames = createAnimationTimeline(grid, { frameDurationMilliseconds: 80, pathSeed: 9 });
 
   // The path always begins at (0,0) with a two-segment snake.
   // The first contribution is reached after the initial two points.

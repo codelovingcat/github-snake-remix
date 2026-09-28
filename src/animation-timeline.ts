@@ -54,7 +54,8 @@ export function createAnimationTimeline(
   }
 
   const second = path[1];
-  const snake = new SnakeEngine(first, second);
+  const initialPoints = second ? [first, second] : [first];
+  const snake = new SnakeEngine(first, second, initialPoints);
   const startIndex = second ? 2 : 1;
   let hearts: HeartParticle[] = [];
   const frames: AnimationFrame[] = [];

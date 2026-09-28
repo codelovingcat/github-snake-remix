@@ -29,9 +29,20 @@ export class SnakeEngine {
   private segments: SnakeSegment[];
   private readonly consumed = new Set<string>();
 
-  public constructor(start: Point, secondSegment?: Point) {
+  public constructor(
+    start: Point,
+    secondSegment?: Point,
+    initialConsumedPoints: readonly Point[] = []
+  ) {
     if (secondSegment && !isAdjacent(start, secondSegment)) {
       throw new Error("Initial snake segments must be adjacent.");
+    }
+
+    for (const point of initialConsumedPoints) {
+      if (point.x < 0 || point.y < 0) {
+        throw new Error("Initial consumed points must be within the grid.");
+      }
+      this.consumed.add(pointKey(point));
     }
 
     this.segments = secondSegment
