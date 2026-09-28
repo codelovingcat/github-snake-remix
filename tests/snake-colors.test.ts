@@ -19,6 +19,7 @@ test("each growth advances through the full extended cute snake color palette", 
   assert.deepEqual(
     snake.state.segments.slice(0, 10).map((segment) => segment.color),
     [
+      "#3b82f6",
       "#93c5fd",
       "#f9a8d4",
       "#ef4444",
@@ -27,8 +28,7 @@ test("each growth advances through the full extended cute snake color palette", 
       "#4ade80",
       "#facc15",
       "#2dd4bf",
-      "#f472b6",
-      "#3b82f6"
+      "#f472b6"
     ]
   );
 });
