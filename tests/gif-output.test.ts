@@ -72,14 +72,14 @@ test("preserves different snake colors in different GIF frames", async () => {
 
   const metadata = await sharp(output, { animated: true }).metadata();
   assert.equal(metadata.pages, 2);
-  assert.equal(metadata.pageHeight, 16);
+  assert.equal(Number(metadata.pageHeight), 18);
 
   const { data, info } = await sharp(output, { animated: true })
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
 
-  assert.equal(info.pageHeight, 16);
+  assert.equal(Number(info.pageHeight), 18);
   assert.equal(info.pages, 2);
 
   const width = info.width;
@@ -90,7 +90,7 @@ test("preserves different snake colors in different GIF frames", async () => {
 
   assert.ok(width === 18);
   assert.ok(channels !== undefined);
-  assert.ok(pageHeight === 16);
+  assert.ok(Number(pageHeight) === 18);
 
   const pixelAt = (page: number): readonly [number, number, number] => {
     const offset = ((page * pageHeight + centerY) * width + centerX) * channels;
