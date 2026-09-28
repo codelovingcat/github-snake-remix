@@ -29,8 +29,17 @@ export class SnakeEngine {
   private segments: SnakeSegment[];
   private readonly consumed = new Set<string>();
 
-  public constructor(start: Point) {
-    this.segments = [{ position: { ...start }, color: SNAKE_START_COLOR, level: 0 }];
+  public constructor(start: Point, secondSegment?: Point) {
+    if (secondSegment && !isAdjacent(start, secondSegment)) {
+      throw new Error("Initial snake segments must be adjacent.");
+    }
+
+    this.segments = secondSegment
+      ? [
+        { position: { ...secondSegment }, color: SNAKE_START_COLOR, level: 0 },
+        { position: { ...start }, color: SNAKE_START_COLOR, level: 0 }
+      ]
+      : [{ position: { ...start }, color: SNAKE_START_COLOR, level: 0 }];
   }
 
   public get state(): SnakeState {

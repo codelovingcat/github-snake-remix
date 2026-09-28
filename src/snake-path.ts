@@ -10,10 +10,10 @@ export function planSnakePath(grid: ContributionGrid, seed = DEFAULT_SEED): read
 
   const random = createSeededRandom(seed);
   const totalCells = grid.columns * grid.rows;
-  const start = {
-    x: Math.floor(random() * grid.columns),
-    y: Math.floor(random() * grid.rows)
-  };
+
+  // Always begin from the first grid cell. The seeded traversal only changes
+  // the route taken after the starting point.
+  const start = { x: 0, y: 0 };
 
   const path: Point[] = [start];
   const visited = new Set<string>([pointKey(start)]);

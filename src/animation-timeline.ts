@@ -5,8 +5,6 @@ import type { Point } from "./domain.js";
 
 const HEART_LIFETIME_FRAMES = 9;
 const COMMIT_WAIT_FRAMES = 1;
-const COMMIT_BLINK_CYCLES = 3;
-const COMMIT_BLINK_FRAMES = COMMIT_BLINK_CYCLES * 2;
 const FINALE_WAIT_FRAMES = 2;
 const FINALE_BLINK_FRAMES = 6;
 const FINALE_FRAMES_PER_COLOR = 2;
@@ -55,7 +53,9 @@ export function createAnimationTimeline(
     return [];
   }
 
-  const snake = new SnakeEngine(first);
+  const second = path[1];
+  const snake = new SnakeEngine(first, second);
+  const startIndex = second ? 2 : 1;
   let hearts: HeartParticle[] = [];
   const frames: AnimationFrame[] = [];
 
@@ -88,7 +88,7 @@ export function createAnimationTimeline(
 
   pushFrame({ hearts: [], snakeVisible: true });
 
-  for (let index = 1; index < path.length; index += 1) {
+  for (let index = startIndex; index < path.length; index += 1) {
     const point = path[index];
     if (!point) continue;
 
@@ -98,13 +98,8 @@ export function createAnimationTimeline(
     }
 
     if (cell.level > 0) {
-      // Hold the current frame instead of adding a duplicate image frame.
+      // Hold the current frame briefly, then consume and grow without blinking.
       extendLastFrameDelay(COMMIT_WAIT_FRAMES * duration);
-
-      for (let blink = 0; blink < COMMIT_BLINK_FRAMES; blink += 1) {
-        advanceHearts();
-        pushFrame({ snakeVisible: blink % 2 === 1 });
-      }
 
       const consumed = snake.consume(cell);
       if (!consumed) {

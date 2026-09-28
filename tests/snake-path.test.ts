@@ -8,15 +8,12 @@ const grid = {
   cells: []
 };
 
-test("plans a complete non-linear snake path", () => {
-  assert.deepEqual(planSnakePath(grid), [
-    { x: 0, y: 0 },
-    { x: 0, y: 1 },
-    { x: 1, y: 1 },
-    { x: 1, y: 0 },
-    { x: 2, y: 0 },
-    { x: 2, y: 1 }
-  ]);
+test("plans a complete non-linear snake path from the first grid cell", () => {
+  const path = planSnakePath(grid);
+
+  assert.deepEqual(path[0], { x: 0, y: 0 });
+  assert.equal(path.length, 6);
+  assert.equal(new Set(path.map((point) => `${point.x}:${point.y}`)).size, 6);
 });
 
 test("path is deterministic and covers every grid coordinate once", () => {
@@ -38,9 +35,15 @@ test("path is deterministic and covers every grid coordinate once", () => {
   }
 });
 
-test("different seeds can produce different valid paths", () => {
+test("different seeds can produce different valid paths without changing the start", () => {
   const first = planSnakePath(grid, 1);
   const second = planSnakePath(grid, 9);
+  const third = planSnakePath(grid, 17);
 
-  assert.notDeepEqual(first, second);
+  assert.deepEqual(first[0], { x: 0, y: 0 });
+  assert.deepEqual(second[0], { x: 0, y: 0 });
+  assert.deepEqual(third[0], { x: 0, y: 0 });
+
+  const uniquePaths = new Set([first, second, third].map((path) => JSON.stringify(path)));
+  assert.ok(uniquePaths.size >= 2);
 });

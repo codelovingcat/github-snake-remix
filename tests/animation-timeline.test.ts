@@ -13,28 +13,29 @@ const grid = {
   ]
 };
 
-test("timeline is deterministic with explicit seed and elapsed time", () => {
+test("timeline is deterministic with explicit seed and always starts from the first cell", () => {
   const first = createAnimationTimeline(grid, { frameDurationMilliseconds: 100, pathSeed: 1 });
   const second = createAnimationTimeline(grid, { frameDurationMilliseconds: 100, pathSeed: 1 });
 
   assert.deepEqual(first, second);
   assert.equal(first[0]?.elapsedMilliseconds, 0);
   assert.equal(first[0]?.snakeVisible, true);
+  assert.equal(first[0]?.state.segments.length, 2);
+  assert.equal(first[0]?.state.segments[1]?.position.x, 0);
+  assert.equal(first[0]?.state.segments[1]?.position.y, 0);
 });
 
-test("a consumed contribution waits, blinks three times, then grows", () => {
+test("a consumed contribution pauses briefly, then grows without blinking", () => {
   const frames = createAnimationTimeline(grid, { frameDurationMilliseconds: 80, pathSeed: 1 });
 
-  // The extra wait is stored as GIF delay on the frame before the blink.
-  // The following six frames are three off/on blink cycles.
-  assert.equal(frames[0]?.delayMilliseconds, 160);
-  assert.deepEqual(
-    frames.slice(1, 7).map((frame) => frame.snakeVisible),
-    [false, true, false, true, false, true]
-  );
+  // The path always begins at (0,0) with a two-segment snake.
+  // The first contribution is reached after the initial two points.
+  const consumedIndex = frames.findIndex((frame) => frame.consumedDate === "2026-09-21");
 
-  assert.equal(frames[7]?.consumedDate, "2026-09-21");
-  assert.equal(frames[7]?.state.segments.length, 2);
+  assert.ok(consumedIndex > 0);
+  assert.equal(frames[consumedIndex - 1]?.delayMilliseconds, 160);
+  assert.ok(frames.slice(0, consumedIndex).every((frame) => frame.snakeVisible !== false));
+  assert.equal(frames[consumedIndex]?.state.segments.length, 3);
   assert.equal(frames[7]?.state.segments[0]?.color, "#f472b6");
   assert.equal(frames[7]?.hearts?.length, 1);
   assert.deepEqual(frames[7]?.hearts?.[0], {
@@ -44,7 +45,7 @@ test("a consumed contribution waits, blinks three times, then grows", () => {
   });
 });
 
-test("the final celebration cycles every palette color through rainbow hearts", () => {
+test("the final celebration keeps its three blink cycles and cycles every palette color through rainbow hearts", () => {
   const frames = createAnimationTimeline(grid, { frameDurationMilliseconds: 80, pathSeed: 1 });
 
   const rainbowFrames = frames.filter((frame) => frame.rainbowHeartColorIndex !== undefined);
