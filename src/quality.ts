@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 
-export const MAX_ANIMATION_FRAMES = 500;
+export const MAX_ANIMATION_FRAMES = 3000;
 export const MAX_GIF_BYTES = 1_500_000;
 
 export function validateAnimationFrameCount(frameCount: number): void {

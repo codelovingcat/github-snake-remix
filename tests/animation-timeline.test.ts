@@ -13,47 +13,66 @@ const grid = {
   ]
 };
 
-test("timeline is deterministic with explicit elapsed time", () => {
-  const first = createAnimationTimeline(grid, { frameDurationMilliseconds: 100 });
-  const second = createAnimationTimeline(grid, { frameDurationMilliseconds: 100 });
+test("timeline is deterministic with explicit seed and elapsed time", () => {
+  const first = createAnimationTimeline(grid, { frameDurationMilliseconds: 100, pathSeed: 1 });
+  const second = createAnimationTimeline(grid, { frameDurationMilliseconds: 100, pathSeed: 1 });
 
   assert.deepEqual(first, second);
-  assert.equal(first.length, 4);
-  assert.deepEqual(first[0]?.hearts, []);
-  assert.equal(first[1]?.elapsedMilliseconds, 100);
-  assert.equal(first[2]?.elapsedMilliseconds, 200);
+  assert.equal(first[0]?.elapsedMilliseconds, 0);
+  assert.equal(first[0]?.snakeVisible, true);
 });
 
-test("a consumed contribution is recorded on the corresponding frame", () => {
-  const frames = createAnimationTimeline(grid, { frameDurationMilliseconds: 80 });
+test("a consumed contribution waits, blinks three times, then grows", () => {
+  const frames = createAnimationTimeline(grid, { frameDurationMilliseconds: 80, pathSeed: 1 });
 
-  // The deterministic serpentine path for this 2x2 grid is:
-  // (0,0) -> (0,1) -> (1,1) -> (1,0).
-  assert.equal(frames[1]?.consumedDate, "2026-09-21");
-  assert.equal(frames[1]?.state.segments.length, 2);
-  assert.equal(frames[1]?.state.segments[0]?.color, "#f472b6");
-  assert.equal(frames[1]?.hearts?.length, 1);
-  assert.deepEqual(frames[1]?.hearts?.[0], {
+  // The path starts at (0,0) and reaches the first contribution at (0,1).
+  // Frame 1 is the wait; frames 2-7 are three off/on blink cycles;
+  // frame 8 is the growth/consume frame.
+  assert.equal(frames[1]?.consumedDate, undefined);
+  assert.equal(frames[1]?.state.segments.length, 1);
+  assert.deepEqual(
+    frames.slice(2, 8).map((frame) => frame.snakeVisible),
+    [false, true, false, true, false, true]
+  );
+
+  assert.equal(frames[8]?.consumedDate, "2026-09-21");
+  assert.equal(frames[8]?.state.segments.length, 2);
+  assert.equal(frames[8]?.state.segments[0]?.color, "#f472b6");
+  assert.equal(frames[8]?.hearts?.length, 1);
+  assert.deepEqual(frames[8]?.hearts?.[0], {
     origin: { x: 0, y: 1 },
     color: "#f472b6",
     age: 0
   });
-
-  assert.equal(frames[2]?.consumedDate, undefined);
-  assert.equal(frames[2]?.state.segments.length, 2);
-  assert.equal(frames[2]?.hearts?.length, 1);
-  assert.equal(frames[2]?.hearts?.[0]?.age, 1);
-
-  assert.equal(frames[3]?.consumedDate, "2026-09-22");
-  assert.equal(frames[3]?.state.segments.length, 3);
-  assert.equal(frames[3]?.hearts?.length, 2);
-  assert.deepEqual(frames[3]?.hearts?.map((heart) => heart.color), ["#f472b6", "#2dd4bf"]);
-  assert.equal(frames[3]?.state.segments[0]?.color, "#2dd4bf");
 });
 
-test("invalid frame duration is rejected", () => {
+test("the final celebration cycles every palette color through rainbow hearts", () => {
+  const frames = createAnimationTimeline(grid, { frameDurationMilliseconds: 80, pathSeed: 1 });
+
+  const rainbowFrames = frames.filter((frame) => frame.rainbowHeartColorIndex !== undefined);
+  assert.equal(rainbowFrames.length, 30);
+  assert.deepEqual(
+    rainbowFrames.slice(0, 3).map((frame) => frame.rainbowHeartColorIndex),
+    [0, 0, 0]
+  );
+  assert.deepEqual(
+    rainbowFrames.slice(0, 3).map((frame) => frame.rainbowHeartAge),
+    [0, 1, 2]
+  );
+
+  const uniqueColors = new Set(rainbowFrames.map((frame) => frame.rainbowHeartColorIndex));
+  assert.equal(uniqueColors.size, 10);
+  assert.equal(rainbowFrames.at(-1)?.rainbowHeartAge, 2);
+});
+
+test("invalid frame duration and path seed are rejected", () => {
   assert.throws(
     () => createAnimationTimeline(grid, { frameDurationMilliseconds: 0 }),
     /positive integer/
+  );
+
+  assert.throws(
+    () => createAnimationTimeline(grid, { pathSeed: 1.5 }),
+    /Path seed must be an integer/
   );
 });

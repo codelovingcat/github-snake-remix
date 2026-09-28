@@ -45,6 +45,44 @@ test("renders a heart in the snake color for a consumed contribution", () => {
   );
 });
 
+test("supports three blink cycles by hiding the snake without removing the grid", () => {
+  const svg = renderSvg(
+    [{ x: 0, y: 0, level: 4 as const }],
+    {
+      segments: [{ position: { x: 0, y: 0 }, color: "#a855f7", level: 4 as const }],
+      consumed: new Set<string>()
+    },
+    1,
+    1,
+    [],
+    { snakeVisible: false }
+  );
+
+  assert.match(svg, /fill="#39d353"/);
+  assert.doesNotMatch(svg, /fill="#a855f7"/);
+});
+
+test("renders rainbow hearts for every snake segment", () => {
+  const svg = renderSvg(
+    [{ x: 0, y: 0, level: 0 as const }],
+    {
+      segments: [
+        { position: { x: 0, y: 0 }, color: "#3b82f6", level: 0 as const },
+        { position: { x: 1, y: 0 }, color: "#f472b6", level: 1 as const }
+      ],
+      consumed: new Set<string>()
+    },
+    2,
+    1,
+    [],
+    { rainbowHeartColorIndex: 0, rainbowHeartAge: 1 }
+  );
+
+  assert.equal((svg.match(/data-rainbow-heart="true"/g) ?? []).length, 2);
+  assert.match(svg, /data-rainbow-heart="true"[^>]*fill="#3b82f6"[^>]*opacity="0.55"/);
+  assert.match(svg, /data-rainbow-heart="true"[^>]*fill="#f472b6"[^>]*opacity="0.55"/);
+});
+
 test("keeps unconsumed contribution cells visible", () => {
   const svg = renderSvg(
     [{ x: 0, y: 0, level: 4 as const }],

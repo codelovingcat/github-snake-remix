@@ -1,7 +1,7 @@
 import { isAdjacent, pointKey, type Cell, type Point } from "./domain.js";
 
 const SNAKE_START_COLOR = "#3b82f6";
-const SNAKE_COLOR_CYCLE = [
+export const SNAKE_COLOR_CYCLE = [
   "#3b82f6", // blue
   "#f472b6", // pink
   "#2dd4bf", // turquoise
