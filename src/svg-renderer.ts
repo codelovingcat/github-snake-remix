@@ -134,8 +134,7 @@ export function renderSvg(
     snakeRects,
     heartRects,
     rainbowHeartRects,
-    `<rect data-progress-bar="true" x="${progressBarX}" y="${progressBarY}" width="${progressBarWidth}" height="${PROGRESS_BAR_HEIGHT}" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>`,
-    `<rect data-progress-fill="true" x="${progressBarX}" y="${progressBarY}" width="${progressFillWidth.toFixed(2)}" height="${PROGRESS_BAR_HEIGHT}" rx="4" fill="url(#progress-green)"/>`,
+    `<rect data-progress-fill="true" x="${progressBarX}" y="${progressBarY}" width="${progressFillWidth.toFixed(2)}" height="${PROGRESS_BAR_HEIGHT}" rx="0" fill="url(#progress-green)"/>`,
     "</svg>"
   ].join("");
 }
