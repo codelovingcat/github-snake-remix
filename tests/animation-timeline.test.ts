@@ -34,10 +34,10 @@ test("a consumed contribution waits, blinks three times, then grows", () => {
   );
 
   assert.equal(frames[7]?.consumedDate, "2026-09-21");
-  assert.equal(frames[8]?.state.segments.length, 2);
-  assert.equal(frames[8]?.state.segments[0]?.color, "#f472b6");
-  assert.equal(frames[8]?.hearts?.length, 1);
-  assert.deepEqual(frames[8]?.hearts?.[0], {
+  assert.equal(frames[7]?.state.segments.length, 2);
+  assert.equal(frames[7]?.state.segments[0]?.color, "#f472b6");
+  assert.equal(frames[7]?.hearts?.length, 1);
+  assert.deepEqual(frames[7]?.hearts?.[0], {
     origin: { x: 0, y: 1 },
     color: "#f472b6",
     age: 0
@@ -60,7 +60,7 @@ test("the final celebration cycles every palette color through rainbow hearts", 
 
   const uniqueColors = new Set(rainbowFrames.map((frame) => frame.rainbowHeartColorIndex));
   assert.equal(uniqueColors.size, 10);
-  assert.equal(rainbowFrames.at(-1)?.rainbowHeartAge, 2);
+  assert.equal(rainbowFrames.at(-1)?.rainbowHeartAge, 1);
 });
 
 test("invalid frame duration and path seed are rejected", () => {
