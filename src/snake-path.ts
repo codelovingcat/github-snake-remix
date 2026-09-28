@@ -2,183 +2,106 @@ import { isAdjacent, pointKey, type Point } from "./domain.js";
 import type { ContributionGrid } from "./contribution-grid.js";
 
 const DEFAULT_SEED = 1;
+const ROUTE_VARIANT_COUNT = 3;
 
 export function planSnakePath(grid: ContributionGrid, seed = DEFAULT_SEED): readonly Point[] {
   if (grid.columns < 1 || grid.rows < 1) {
     return [];
   }
 
-  const random = createSeededRandom(seed);
-  const totalCells = grid.columns * grid.rows;
-
-  // Always begin from the first grid cell. The seeded traversal only changes
-  // the route taken after the starting point.
-  const start = { x: 0, y: 0 };
-
-  const path: Point[] = [start];
-  const visited = new Set<string>([pointKey(start)]);
-
-  if (!walkPath(start, path, visited, grid.columns, grid.rows, random, totalCells)) {
-    throw new Error("Snake path generation failed: unable to cover the entire grid.");
+  if (!Number.isInteger(seed)) {
+    throw new Error("Snake path seed must be an integer.");
   }
+
+  const routeVariant = (seed >>> 0) % ROUTE_VARIANT_COUNT;
+  const path = buildRouteVariant(grid.columns, grid.rows, routeVariant);
 
   validatePath(path, grid.columns, grid.rows);
   return path;
 }
 
-function walkPath(
-  current: Point,
-  path: Point[],
-  visited: Set<string>,
-  columns: number,
-  rows: number,
-  random: () => number,
-  totalCells: number
-): boolean {
-  if (path.length === totalCells) {
-    return true;
+function buildRouteVariant(columns: number, rows: number, variant: number): Point[] {
+  if (variant === 1) {
+    return buildColumnSnake(columns, rows);
   }
 
-  const candidates = getUnvisitedNeighbors(current, visited, columns, rows)
-    .map((point) => ({
-      point,
-      onwardMoves: countUnvisitedNeighbors(point, visited, columns, rows),
-      jitter: random()
-    }))
-    .sort((a, b) => a.onwardMoves - b.onwardMoves || a.jitter - b.jitter);
-
-  for (const candidate of candidates) {
-    const key = pointKey(candidate.point);
-    visited.add(key);
-    path.push(candidate.point);
-
-    if (!createsDeadEnd(candidate.point, visited, columns, rows, totalCells)) {
-      if (walkPath(candidate.point, path, visited, columns, rows, random, totalCells)) {
-        return true;
-      }
-    }
-
-    path.pop();
-    visited.delete(key);
+  if (variant === 2) {
+    return buildSpiral(columns, rows);
   }
 
-  return false;
+  return buildRowSnake(columns, rows);
 }
 
-function createsDeadEnd(
-  current: Point,
-  visited: Set<string>,
-  columns: number,
-  rows: number,
-  totalCells: number
-): boolean {
-  if (visited.size === totalCells) {
-    return false;
-  }
+function buildRowSnake(columns: number, rows: number): Point[] {
+  const path: Point[] = [];
 
-  const unvisited = totalCells - visited.size;
-
-  // The remaining unvisited cells must stay connected to the current head.
-  const reachable = new Set<string>([pointKey(current)]);
-  const queue: Point[] = [current];
-
-  while (queue.length > 0) {
-    const point = queue.pop();
-    if (!point) continue;
-
-    for (const neighbor of getAllNeighbors(point, columns, rows)) {
-      const key = pointKey(neighbor);
-      if (neighbor.x === current.x && neighbor.y === current.y) {
-        continue;
+  for (let y = 0; y < rows; y += 1) {
+    if (y % 2 === 0) {
+      for (let x = 0; x < columns; x += 1) {
+        path.push({ x, y });
       }
-
-      if (!visited.has(key) || key === pointKey(current)) {
-        if (!reachable.has(key)) {
-          reachable.add(key);
-          queue.push(neighbor);
-        }
+    } else {
+      for (let x = columns - 1; x >= 0; x -= 1) {
+        path.push({ x, y });
       }
     }
   }
 
-  if (reachable.size !== unvisited + 1) {
-    return true;
-  }
+  return path;
+}
 
-  // More than one isolated degree-1 cell means the remaining path cannot
-  // be completed from the current head without revisiting a cell.
-  let deadEnds = 0;
+function buildColumnSnake(columns: number, rows: number): Point[] {
+  const path: Point[] = [];
 
   for (let x = 0; x < columns; x += 1) {
-    for (let y = 0; y < rows; y += 1) {
-      const key = `${x}:${y}`;
-      if (visited.has(key)) continue;
-
-      const degree = getAllNeighbors({ x, y }, columns, rows)
-        .filter((neighbor) => !visited.has(pointKey(neighbor)) || pointKey(neighbor) === pointKey(current))
-        .length;
-
-      if (degree === 0) {
-        return true;
+    if (x % 2 === 0) {
+      for (let y = 0; y < rows; y += 1) {
+        path.push({ x, y });
       }
-
-      if (degree === 1) {
-        deadEnds += 1;
-        if (deadEnds > 1) {
-          return true;
-        }
+    } else {
+      for (let y = rows - 1; y >= 0; y -= 1) {
+        path.push({ x, y });
       }
     }
   }
 
-  return false;
+  return path;
 }
 
-function getUnvisitedNeighbors(
-  current: Point,
-  visited: Set<string>,
-  columns: number,
-  rows: number
-): Point[] {
-  return getAllNeighbors(current, columns, rows)
-    .filter((point) => !visited.has(pointKey(point)));
-}
+function buildSpiral(columns: number, rows: number): Point[] {
+  const path: Point[] = [];
+  let left = 0;
+  let right = columns - 1;
+  let top = 0;
+  let bottom = rows - 1;
 
-function getAllNeighbors(current: Point, columns: number, rows: number): Point[] {
-  const neighbors: Point[] = [];
+  while (left <= right && top <= bottom) {
+    for (let x = left; x <= right; x += 1) {
+      path.push({ x, y: top });
+    }
+    top += 1;
 
-  for (const direction of [
-    { x: 0, y: -1 },
-    { x: 0, y: 1 },
-    { x: -1, y: 0 },
-    { x: 1, y: 0 }
-  ]) {
-    const next = { x: current.x + direction.x, y: current.y + direction.y };
+    for (let y = top; y <= bottom; y += 1) {
+      path.push({ x: right, y });
+    }
+    right -= 1;
 
-    if (next.x >= 0 && next.x < columns && next.y >= 0 && next.y < rows) {
-      neighbors.push(next);
+    if (top <= bottom) {
+      for (let x = right; x >= left; x -= 1) {
+        path.push({ x, y: bottom });
+      }
+      bottom -= 1;
+    }
+
+    if (left <= right) {
+      for (let y = bottom; y >= top; y -= 1) {
+        path.push({ x: left, y });
+      }
+      left += 1;
     }
   }
 
-  return neighbors;
-}
-
-function countUnvisitedNeighbors(
-  point: Point,
-  visited: Set<string>,
-  columns: number,
-  rows: number
-): number {
-  return getUnvisitedNeighbors(point, visited, columns, rows).length;
-}
-
-function createSeededRandom(seed: number): () => number {
-  let state = seed >>> 0;
-
-  return () => {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
+  return path;
 }
 
 function validatePath(path: readonly Point[], columns: number, rows: number): void {
