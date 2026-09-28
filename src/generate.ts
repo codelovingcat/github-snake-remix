@@ -13,10 +13,10 @@ if (!token) {
 const provider = new GitHubGraphQlContributionProvider({ token });
 const calendar = await provider.getContributionCalendar();
 const grid = normalizeContributionCalendar(calendar);
-const timeline = createAnimationTimeline(grid, { frameDurationMilliseconds: 90 });
+const timeline = createAnimationTimeline(grid, { frameDurationMilliseconds: 120 });
 
 await renderAnimatedGif(timeline, grid.columns, grid.rows, outputPath, {
-  delayMilliseconds: 90,
+  delayMilliseconds: 120,
   repeat: 0,
   quality: 10,
   maxBytes: Number(process.env.SNAKE_MAX_BYTES ?? 1_500_000)
