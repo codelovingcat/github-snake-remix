@@ -12,11 +12,20 @@ export interface SvgOptions {
   readonly rainbowHeartAge?: number;
 }
 
+export const DEFAULT_CELL_SIZE = 12;
+export const DEFAULT_GAP = 3;
+
 const HEART_RISE_PER_FRAME = 1.5;
 const HEART_OFFSET_FROM_CELL = 5;
 const HEART_BASE_SCALE = 0.75;
 const HEART_GROWTH_PER_FRAME = 0.08;
 const HEART_OPACITY = [1, 1, 0.98, 0.9, 0.78, 0.62, 0.45, 0.25, 0.1] as const;
+
+const PROGRESS_BAR_TOP_GAP = 6;
+const PROGRESS_BAR_HEIGHT = 8;
+const PROGRESS_BAR_BOTTOM_GAP = 3;
+export const SVG_PROGRESS_EXTRA_HEIGHT =
+  PROGRESS_BAR_TOP_GAP + PROGRESS_BAR_HEIGHT + PROGRESS_BAR_BOTTOM_GAP;
 
 const RAINBOW_HEART_OFFSET = 7;
 const RAINBOW_HEART_SCALE = 0.72;
@@ -36,11 +45,12 @@ export function renderSvg(
     throw new Error("SVG dimensions must be positive.");
   }
 
-  const cellSize = options.cellSize ?? 12;
-  const gap = options.gap ?? 3;
+  const cellSize = options.cellSize ?? DEFAULT_CELL_SIZE;
+  const gap = options.gap ?? DEFAULT_GAP;
   const background = options.background ?? "#0d1117";
   const width = columns * (cellSize + gap) + gap;
-  const height = rows * (cellSize + gap) + gap;
+  const gridHeight = rows * (cellSize + gap) + gap;
+  const height = gridHeight + SVG_PROGRESS_EXTRA_HEIGHT;
 
   const grid = cells.map((cell) => {
     const x = gap + cell.x * (cellSize + gap);
@@ -79,6 +89,20 @@ export function renderSvg(
     ].join("");
   }).join("");
 
+  const totalContributions = cells.filter((cell) => cell.level > 0).length;
+  const consumedContributions = cells.filter(
+    (cell) => cell.level > 0 && snake.consumed.has(cell.x + ":" + cell.y)
+  ).length;
+  const progress = totalContributions === 0
+    ? 0
+    : Math.min(1, consumedContributions / totalContributions);
+  const progressBarX = gap;
+  const progressBarY = gridHeight + PROGRESS_BAR_TOP_GAP;
+  const progressBarWidth = width - gap * 2;
+  const progressFillWidth = progress === 0
+    ? 0
+    : Math.max(4, progressBarWidth * progress);
+
   const rainbowHeartRects = options.snakeVisible === false || options.rainbowHeartColorIndex === undefined
     ? ""
     : snake.segments.map((segment, index) => {
@@ -104,11 +128,14 @@ export function renderSvg(
 
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="GitHub contribution snake">`,
+    `<defs><linearGradient id="progress-green" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#7ee787"/><stop offset="100%" stop-color="#006d32"/></linearGradient></defs>`,
     `<rect width="${width}" height="${height}" rx="8" fill="${background}"/>`,
     grid,
     snakeRects,
     heartRects,
     rainbowHeartRects,
+    `<rect data-progress-bar="true" x="${progressBarX}" y="${progressBarY}" width="${progressBarWidth}" height="${PROGRESS_BAR_HEIGHT}" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>`,
+    `<rect data-progress-fill="true" x="${progressBarX}" y="${progressBarY}" width="${progressFillWidth.toFixed(2)}" height="${PROGRESS_BAR_HEIGHT}" rx="4" fill="url(#progress-green)"/>`,
     "</svg>"
   ].join("");
 }
