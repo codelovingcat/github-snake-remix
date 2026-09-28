@@ -64,11 +64,24 @@ export async function renderAnimatedGif(
         encoder.start();
 
         for (const frame of frames) {
-          const svg = renderSvg(cells, frame.state, columns, rows, frame.hearts ?? [], {
+          const renderOptions = {
             snakeVisible: frame.snakeVisible !== false,
-            rainbowHeartColorIndex: frame.rainbowHeartColorIndex,
-            rainbowHeartAge: frame.rainbowHeartAge
-          });
+            ...(frame.rainbowHeartColorIndex !== undefined
+              ? { rainbowHeartColorIndex: frame.rainbowHeartColorIndex }
+              : {}),
+            ...(frame.rainbowHeartAge !== undefined
+              ? { rainbowHeartAge: frame.rainbowHeartAge }
+              : {})
+          };
+
+          const svg = renderSvg(
+            cells,
+            frame.state,
+            columns,
+            rows,
+            frame.hearts ?? [],
+            renderOptions
+          );
           const png = await sharp(Buffer.from(svg))
             .png()
             .raw()
