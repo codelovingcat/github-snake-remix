@@ -97,8 +97,8 @@ test("renders a growing green progress bar based on consumed contributions", () 
     1
   );
 
-  assert.match(svg, /data-progress-bar="true"[^>]*width="27"/);
-  assert.match(svg, /data-progress-fill="true"[^>]*width="13.50"/);
+  assert.doesNotMatch(svg, /data-progress-bar="true"/);
+  assert.match(svg, /data-progress-fill="true"[^>]*width="13.50"[^>]*height="8"[^>]*rx="0"/);
   assert.match(svg, /stop-color="#7ee787"/);
   assert.match(svg, /stop-color="#006d32"/);
 });
