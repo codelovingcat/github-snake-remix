@@ -64,6 +64,8 @@ export async function renderAnimatedGif(
         encoder.start();
 
         for (const frame of frames) {
+          encoder.setDelay(frame.delayMilliseconds ?? delay);
+
           const renderOptions = {
             snakeVisible: frame.snakeVisible !== false,
             ...(frame.rainbowHeartColorIndex !== undefined

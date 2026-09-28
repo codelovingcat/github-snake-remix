@@ -25,17 +25,15 @@ test("timeline is deterministic with explicit seed and elapsed time", () => {
 test("a consumed contribution waits, blinks three times, then grows", () => {
   const frames = createAnimationTimeline(grid, { frameDurationMilliseconds: 80, pathSeed: 1 });
 
-  // The path starts at (0,0) and reaches the first contribution at (0,1).
-  // Frame 1 is the wait; frames 2-7 are three off/on blink cycles;
-  // frame 8 is the growth/consume frame.
-  assert.equal(frames[1]?.consumedDate, undefined);
-  assert.equal(frames[1]?.state.segments.length, 1);
+  // The extra wait is stored as GIF delay on the frame before the blink.
+  // The following six frames are three off/on blink cycles.
+  assert.equal(frames[0]?.delayMilliseconds, 160);
   assert.deepEqual(
-    frames.slice(2, 8).map((frame) => frame.snakeVisible),
+    frames.slice(1, 7).map((frame) => frame.snakeVisible),
     [false, true, false, true, false, true]
   );
 
-  assert.equal(frames[8]?.consumedDate, "2026-09-21");
+  assert.equal(frames[7]?.consumedDate, "2026-09-21");
   assert.equal(frames[8]?.state.segments.length, 2);
   assert.equal(frames[8]?.state.segments[0]?.color, "#f472b6");
   assert.equal(frames[8]?.hearts?.length, 1);
@@ -50,14 +48,14 @@ test("the final celebration cycles every palette color through rainbow hearts", 
   const frames = createAnimationTimeline(grid, { frameDurationMilliseconds: 80, pathSeed: 1 });
 
   const rainbowFrames = frames.filter((frame) => frame.rainbowHeartColorIndex !== undefined);
-  assert.equal(rainbowFrames.length, 30);
+  assert.equal(rainbowFrames.length, 20);
   assert.deepEqual(
-    rainbowFrames.slice(0, 3).map((frame) => frame.rainbowHeartColorIndex),
-    [0, 0, 0]
+    rainbowFrames.slice(0, 2).map((frame) => frame.rainbowHeartColorIndex),
+    [0, 0]
   );
   assert.deepEqual(
-    rainbowFrames.slice(0, 3).map((frame) => frame.rainbowHeartAge),
-    [0, 1, 2]
+    rainbowFrames.slice(0, 2).map((frame) => frame.rainbowHeartAge),
+    [0, 1]
   );
 
   const uniqueColors = new Set(rainbowFrames.map((frame) => frame.rainbowHeartColorIndex));

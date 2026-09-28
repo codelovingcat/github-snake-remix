@@ -9,7 +9,7 @@ const COMMIT_BLINK_CYCLES = 3;
 const COMMIT_BLINK_FRAMES = COMMIT_BLINK_CYCLES * 2;
 const FINALE_WAIT_FRAMES = 2;
 const FINALE_BLINK_FRAMES = 6;
-const FINALE_FRAMES_PER_COLOR = 3;
+const FINALE_FRAMES_PER_COLOR = 2;
 
 export interface HeartParticle {
   readonly origin: Point;
@@ -26,6 +26,7 @@ export interface AnimationFrame {
   readonly snakeVisible?: boolean;
   readonly rainbowHeartColorIndex?: number;
   readonly rainbowHeartAge?: number;
+  readonly delayMilliseconds?: number;
 }
 
 export interface AnimationOptions {
@@ -74,6 +75,17 @@ export function createAnimationTimeline(
     });
   };
 
+  const extendLastFrameDelay = (additionalMilliseconds: number): void => {
+    const last = frames.at(-1);
+    if (!last) return;
+
+    const currentDelay = last.delayMilliseconds ?? duration;
+    frames[frames.length - 1] = {
+      ...last,
+      delayMilliseconds: currentDelay + additionalMilliseconds
+    };
+  };
+
   pushFrame({ hearts: [], snakeVisible: true });
 
   for (let index = 1; index < path.length; index += 1) {
@@ -86,10 +98,8 @@ export function createAnimationTimeline(
     }
 
     if (cell.level > 0) {
-      for (let wait = 0; wait < COMMIT_WAIT_FRAMES; wait += 1) {
-        advanceHearts();
-        pushFrame({ snakeVisible: true });
-      }
+      // Hold the current frame instead of adding a duplicate image frame.
+      extendLastFrameDelay(COMMIT_WAIT_FRAMES * duration);
 
       for (let blink = 0; blink < COMMIT_BLINK_FRAMES; blink += 1) {
         advanceHearts();
@@ -124,10 +134,7 @@ export function createAnimationTimeline(
 
   // End-of-run celebration: blink three times, pause, then every snake segment
   // cycles through every snake color while its heart grows and fades.
-  for (let wait = 0; wait < FINALE_WAIT_FRAMES; wait += 1) {
-    advanceHearts();
-    pushFrame({ snakeVisible: true });
-  }
+  extendLastFrameDelay(FINALE_WAIT_FRAMES * duration);
 
   for (let blink = 0; blink < FINALE_BLINK_FRAMES; blink += 1) {
     advanceHearts();
