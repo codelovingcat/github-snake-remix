@@ -5,7 +5,7 @@ import GIFEncoder from "gif-encoder-2";
 import sharp from "sharp";
 import type { AnimationFrame } from "./animation-timeline.js";
 import type { ContributionGridCell } from "./contribution-grid.js";
-import { renderSvg } from "./svg-renderer.js";
+import { DEFAULT_CELL_SIZE, DEFAULT_GAP, renderSvg, SVG_PROGRESS_EXTRA_HEIGHT } from "./svg-renderer.js";
 import { validateGifArtifact, validateAnimationFrameCount } from "./quality.js";
 
 export interface GifOptions {
@@ -31,10 +31,10 @@ export async function renderAnimatedGif(
     throw new Error("GIF grid dimensions must be positive.");
   }
 
-  const cellSize = 12;
-  const gap = 3;
+  const cellSize = DEFAULT_CELL_SIZE;
+  const gap = DEFAULT_GAP;
   const width = options.width ?? columns * (cellSize + gap) + gap;
-  const height = options.height ?? rows * (cellSize + gap) + gap;
+  const height = options.height ?? rows * (cellSize + gap) + gap + SVG_PROGRESS_EXTRA_HEIGHT;
   const delay = options.delayMilliseconds ?? 90;
   const repeat = options.repeat ?? 0;
   const quality = options.quality ?? 10;
