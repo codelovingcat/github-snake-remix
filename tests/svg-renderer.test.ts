@@ -83,6 +83,26 @@ test("renders rainbow hearts for every snake segment", () => {
   assert.match(svg, /data-rainbow-heart="true"[^>]*fill="#f472b6"[^>]*opacity="0.55"/);
 });
 
+test("renders a growing green progress bar based on consumed contributions", () => {
+  const svg = renderSvg(
+    [
+      { x: 0, y: 0, level: 4 as const },
+      { x: 1, y: 0, level: 2 as const }
+    ],
+    {
+      segments: [{ position: { x: 0, y: 0 }, color: "#3b82f6", level: 0 as const }],
+      consumed: new Set(["0:0"])
+    },
+    2,
+    1
+  );
+
+  assert.match(svg, /data-progress-bar="true"[^>]*width="27"/);
+  assert.match(svg, /data-progress-fill="true"[^>]*width="13.50"/);
+  assert.match(svg, /stop-color="#7ee787"/);
+  assert.match(svg, /stop-color="#006d32"/);
+});
+
 test("keeps unconsumed contribution cells visible", () => {
   const svg = renderSvg(
     [{ x: 0, y: 0, level: 4 as const }],
