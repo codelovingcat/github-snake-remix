@@ -72,7 +72,8 @@ test("preserves different snake colors in different GIF frames", async () => {
 
   const metadata = await sharp(output, { animated: true }).metadata();
   assert.equal(metadata.pages, 2);
-  const pageHeight = Number(metadata.pageHeight);\n  assert.equal(pageHeight, 35);
+  const pageHeight = Number(metadata.pageHeight);
+  assert.equal(pageHeight, 35);
 
   const { data, info } = await sharp(output, { animated: true })
     .ensureAlpha()
