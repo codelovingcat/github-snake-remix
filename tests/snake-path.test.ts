@@ -16,7 +16,7 @@ test("always starts from the first grid cell", () => {
   }
 });
 
-test("uses three distinct route variants while keeping the same start", () => {
+test("different seeds produce distinct natural zigzag routes while keeping the same start", () => {
   const first = planSnakePath(grid, 0);
   const second = planSnakePath(grid, 1);
   const third = planSnakePath(grid, 2);
@@ -32,6 +32,9 @@ test("uses three distinct route variants while keeping the same start", () => {
   assert.equal(uniquePaths.size, 3);
   assert.notDeepEqual(first, second);
   assert.notDeepEqual(second, third);
+  assert.ok(first.length > 53 * 7);
+  assert.ok(second.length > 53 * 7);
+  assert.ok(third.length > 53 * 7);
 });
 
 test("keeps every route valid and covers every grid coordinate", () => {
