@@ -110,7 +110,7 @@ test("natural detours are long enough to be visible and stay within the frame bu
     }
 
     let cursor = index + 1;
-    let verticalDepth = 0;
+    let verticalDepth = 1;
 
     while (cursor + 1 < path.length) {
       const current = path[cursor];
