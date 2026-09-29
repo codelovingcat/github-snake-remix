@@ -64,35 +64,61 @@ function buildJitteredRowSnake(columns: number, rows: number, seed: number): Poi
 
   const appendDetour = (current: Point, next: Point): boolean => {
     const preferredDepth = 1 + ((normalizedSeed + detourCount) % 2);
-    const preferredDirection = ((normalizedSeed + detourCount) % 2 === 0) ? 1 : -1;
-    const directions = [preferredDirection, -preferredDirection];
+    const verticalDirections = ((normalizedSeed + detourCount) % 2 === 0)
+      ? [1, -1]
+      : [-1, 1];
+    const preferredSpan = 2 + ((normalizedSeed + detourCount) % 2);
+    const horizontalDirection = next.x > current.x ? 1 : -1;
+    const horizontalDirections = [horizontalDirection, -horizontalDirection];
 
-    for (const direction of directions) {
+    for (const verticalDirection of verticalDirections) {
       for (let depth = preferredDepth; depth >= 1; depth -= 1) {
-        const targetY = current.y + direction * depth;
+        const targetY = current.y + verticalDirection * depth;
 
         if (targetY < 0 || targetY >= rows) {
           continue;
         }
 
-        for (let step = 1; step <= depth; step += 1) {
-          path.push({ x: current.x, y: current.y + direction * step });
+        for (const horizontalDir of horizontalDirections) {
+          const maxSpan = horizontalDir > 0
+            ? columns - 1 - current.x
+            : current.x;
+          const span = Math.min(preferredSpan, maxSpan);
+
+          if (span < 1) {
+            continue;
+          }
+
+          const targetX = current.x + horizontalDir * span;
+
+          for (let step = 1; step <= depth; step += 1) {
+            path.push({ x: current.x, y: current.y + verticalDirection * step });
+          }
+
+          for (let step = 1; step <= span; step += 1) {
+            path.push({ x: current.x + horizontalDir * step, y: targetY });
+          }
+
+          const horizontalStep = next.x > targetX ? 1 : -1;
+          for (let x = targetX + horizontalStep; ; x += horizontalStep) {
+            path.push({ x, y: targetY });
+            if (x === next.x) {
+              break;
+            }
+          }
+
+          for (let step = depth - 1; step >= 0; step -= 1) {
+            path.push({ x: next.x, y: current.y + verticalDirection * step });
+          }
+
+          detourCount += 1;
+          return true;
         }
-
-        path.push({ x: next.x, y: targetY });
-
-        for (let step = depth - 1; step >= 0; step -= 1) {
-          path.push({ x: next.x, y: current.y + direction * step });
-        }
-
-        detourCount += 1;
-        return true;
       }
     }
 
     return false;
   };
-
   const first = basePath[0];
   if (first) {
     path.push(first);
