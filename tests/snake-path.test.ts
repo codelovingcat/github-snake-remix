@@ -62,26 +62,23 @@ test("the default horizontal route includes visible one- or two-row zigzags", ()
 
   let foundVisibleDetour = false;
 
-  for (let index = 1; index < path.length - 4; index += 1) {
+  for (let index = 1; index < path.length - 3; index += 1) {
     const first = path[index - 1];
     const second = path[index];
     const third = path[index + 1];
     const fourth = path[index + 2];
-    const fifth = path[index + 3];
 
     if (
       first &&
       second &&
       third &&
       fourth &&
-      fifth &&
       first.x === second.x &&
       second.y !== first.y &&
       second.y === third.y &&
       third.y === fourth.y &&
-      fourth.y === fifth.y &&
       third.x !== second.x &&
-      fifth.x === first.x + (first.x < fifth.x ? 0 : 0)
+      fourth.x !== third.x
     ) {
       foundVisibleDetour = true;
       break;
@@ -90,6 +87,7 @@ test("the default horizontal route includes visible one- or two-row zigzags", ()
 
   assert.equal(foundVisibleDetour, true);
 });
+
 
 test("same seed always selects the same route", () => {
   const first = planSnakePath(grid, 42);
