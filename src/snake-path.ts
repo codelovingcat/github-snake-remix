@@ -2,7 +2,6 @@ import { isAdjacent, pointKey, type Point } from "./domain.js";
 import type { ContributionGrid } from "./contribution-grid.js";
 
 const DEFAULT_SEED = 1;
-const ROUTE_VARIANT_COUNT = 3;
 
 export function planSnakePath(grid: ContributionGrid, seed = DEFAULT_SEED): readonly Point[] {
   if (grid.columns < 1 || grid.rows < 1) {
@@ -13,23 +12,10 @@ export function planSnakePath(grid: ContributionGrid, seed = DEFAULT_SEED): read
     throw new Error("Snake path seed must be an integer.");
   }
 
-  const routeVariant = (seed >>> 0) % ROUTE_VARIANT_COUNT;
-  const path = buildRouteVariant(grid.columns, grid.rows, routeVariant, seed);
+  const path = buildJitteredRowSnake(grid.columns, grid.rows, seed);
 
   validatePath(path, grid.columns, grid.rows);
   return path;
-}
-
-function buildRouteVariant(columns: number, rows: number, variant: number, seed: number): Point[] {
-  if (variant === 1) {
-    return buildJitteredRowSnake(columns, rows, seed);
-  }
-
-  if (variant === 2) {
-    return buildSpiral(columns, rows);
-  }
-
-  return buildRowSnake(columns, rows);
 }
 
 function buildRowSnake(columns: number, rows: number): Point[] {
@@ -241,42 +227,6 @@ function createSeededRandom(seed: number): () => number {
     state ^= state + Math.imul(state ^ (state >>> 7), state | 61);
     return ((state ^ (state >>> 14)) >>> 0) / 4294967296;
   };
-}
-
-function buildSpiral(columns: number, rows: number): Point[] {
-  const path: Point[] = [];
-  let left = 0;
-  let right = columns - 1;
-  let top = 0;
-  let bottom = rows - 1;
-
-  while (left <= right && top <= bottom) {
-    for (let x = left; x <= right; x += 1) {
-      path.push({ x, y: top });
-    }
-    top += 1;
-
-    for (let y = top; y <= bottom; y += 1) {
-      path.push({ x: right, y });
-    }
-    right -= 1;
-
-    if (top <= bottom) {
-      for (let x = right; x >= left; x -= 1) {
-        path.push({ x, y: bottom });
-      }
-      bottom -= 1;
-    }
-
-    if (left <= right) {
-      for (let y = bottom; y >= top; y -= 1) {
-        path.push({ x: left, y });
-      }
-      left += 1;
-    }
-  }
-
-  return path;
 }
 
 function validatePath(path: readonly Point[], columns: number, rows: number): void {
