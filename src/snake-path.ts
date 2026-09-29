@@ -141,6 +141,95 @@ function buildJitteredRowSnake(columns: number, rows: number, seed: number): Poi
     baseIndex += 1;
   }
 
+  const visited = new Set(path.map(pointKey));
+  const expectedLength = columns * rows;
+  let cleanupSteps = 0;
+  const maxCleanupSteps = expectedLength * 2;
+
+  while (visited.size < expectedLength) {
+    const current = path.at(-1);
+    if (!current) {
+      break;
+    }
+
+    const adjacent = [
+      { x: current.x + 1, y: current.y },
+      { x: current.x - 1, y: current.y },
+      { x: current.x, y: current.y + 1 },
+      { x: current.x, y: current.y - 1 }
+    ].filter(
+      (point) =>
+        point.x >= 0 &&
+        point.x < columns &&
+        point.y >= 0 &&
+        point.y < rows
+    );
+
+    const unvisitedAdjacent = adjacent.filter(
+      (point) => !visited.has(pointKey(point))
+    );
+
+    let next: Point | undefined;
+
+    if (unvisitedAdjacent.length > 0) {
+      const horizontal = unvisitedAdjacent.filter((point) => point.y === current.y);
+      const candidates = horizontal.length > 0 && random() < 0.75
+        ? horizontal
+        : unvisitedAdjacent;
+      next = candidates[Math.floor(random() * candidates.length)];
+    } else {
+      const remaining: Point[] = [];
+
+      for (let y = 0; y < rows; y += 1) {
+        for (let x = 0; x < columns; x += 1) {
+          const candidate = { x, y };
+          if (!visited.has(pointKey(candidate))) {
+            remaining.push(candidate);
+          }
+        }
+      }
+
+      const target = remaining
+        .slice()
+        .sort((left, right) => {
+          const leftDistance =
+            Math.abs(left.x - current.x) + Math.abs(left.y - current.y);
+          const rightDistance =
+            Math.abs(right.x - current.x) + Math.abs(right.y - current.y);
+          return leftDistance - rightDistance;
+        })[0];
+
+      if (!target) {
+        break;
+      }
+
+      const horizontalSteps = adjacent.filter(
+        (point) =>
+          point.y === current.y &&
+          Math.abs(point.x - target.x) < Math.abs(current.x - target.x)
+      );
+      const verticalSteps = adjacent.filter(
+        (point) =>
+          point.x === current.x &&
+          Math.abs(point.y - target.y) < Math.abs(current.y - target.y)
+      );
+
+      next = horizontalSteps[0] ?? verticalSteps[0];
+    }
+
+    if (!next) {
+      break;
+    }
+
+    path.push(next);
+    visited.add(pointKey(next));
+    cleanupSteps += 1;
+
+    if (cleanupSteps > maxCleanupSteps) {
+      throw new Error("Snake path cleanup exceeded the maximum step budget.");
+    }
+  }
+
   return path;
 }
 
