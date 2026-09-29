@@ -14,15 +14,15 @@ export function planSnakePath(grid: ContributionGrid, seed = DEFAULT_SEED): read
   }
 
   const routeVariant = (seed >>> 0) % ROUTE_VARIANT_COUNT;
-  const path = buildRouteVariant(grid.columns, grid.rows, routeVariant);
+  const path = buildRouteVariant(grid.columns, grid.rows, routeVariant, seed);
 
   validatePath(path, grid.columns, grid.rows);
   return path;
 }
 
-function buildRouteVariant(columns: number, rows: number, variant: number): Point[] {
+function buildRouteVariant(columns: number, rows: number, variant: number, seed: number): Point[] {
   if (variant === 1) {
-    return buildColumnSnake(columns, rows);
+    return buildJitteredRowSnake(columns, rows, seed);
   }
 
   if (variant === 2) {
@@ -50,19 +50,77 @@ function buildRowSnake(columns: number, rows: number): Point[] {
   return path;
 }
 
-function buildColumnSnake(columns: number, rows: number): Point[] {
-  const path: Point[] = [];
+function buildJitteredRowSnake(columns: number, rows: number, seed: number): Point[] {
+  const basePath = buildRowSnake(columns, rows);
 
-  for (let x = 0; x < columns; x += 1) {
-    if (x % 2 === 0) {
-      for (let y = 0; y < rows; y += 1) {
-        path.push({ x, y });
-      }
-    } else {
-      for (let y = rows - 1; y >= 0; y -= 1) {
-        path.push({ x, y });
+  if (columns < 2 || rows < 2) {
+    return basePath;
+  }
+
+  const path: Point[] = [];
+  const normalizedSeed = seed >>> 0;
+  let horizontalMoves = 0;
+  let detourCount = 0;
+
+  const appendDetour = (current: Point, next: Point): boolean => {
+    const preferredDepth = 1 + ((normalizedSeed + detourCount) % 2);
+    const preferredDirection = ((normalizedSeed + detourCount) % 2 === 0) ? 1 : -1;
+    const directions = [preferredDirection, -preferredDirection];
+
+    for (const direction of directions) {
+      for (let depth = preferredDepth; depth >= 1; depth -= 1) {
+        const targetY = current.y + direction * depth;
+
+        if (targetY < 0 || targetY >= rows) {
+          continue;
+        }
+
+        for (let step = 1; step <= depth; step += 1) {
+          path.push({ x: current.x, y: current.y + direction * step });
+        }
+
+        path.push({ x: next.x, y: targetY });
+
+        for (let step = depth - 1; step >= 0; step -= 1) {
+          path.push({ x: next.x, y: current.y + direction * step });
+        }
+
+        detourCount += 1;
+        return true;
       }
     }
+
+    return false;
+  };
+
+  const first = basePath[0];
+  if (first) {
+    path.push(first);
+  }
+
+  for (let index = 1; index < basePath.length; index += 1) {
+    const current = basePath[index - 1];
+    const next = basePath[index];
+
+    if (!current || !next) {
+      continue;
+    }
+
+    const horizontal = current.y === next.y && current.x !== next.x;
+
+    if (horizontal) {
+      horizontalMoves += 1;
+      const interval = 5 + ((normalizedSeed + current.y) % 3);
+
+      if (horizontalMoves >= interval && appendDetour(current, next)) {
+        horizontalMoves = 0;
+        continue;
+      }
+    } else {
+      horizontalMoves = 0;
+    }
+
+    path.push(next);
   }
 
   return path;
@@ -107,7 +165,7 @@ function buildSpiral(columns: number, rows: number): Point[] {
 function validatePath(path: readonly Point[], columns: number, rows: number): void {
   const expectedLength = columns * rows;
 
-  if (path.length !== expectedLength) {
+  if (path.length < expectedLength) {
     throw new Error("Snake path does not cover the complete grid.");
   }
 
@@ -119,11 +177,6 @@ function validatePath(path: readonly Point[], columns: number, rows: number): vo
     }
 
     const key = pointKey(point);
-
-    if (seen.has(key)) {
-      throw new Error("Snake path contains a duplicate point.");
-    }
-
     seen.add(key);
 
     const previous = path[index - 1];
@@ -132,4 +185,8 @@ function validatePath(path: readonly Point[], columns: number, rows: number): vo
       throw new Error("Snake path contains a non-adjacent move.");
     }
   });
+
+  if (seen.size !== expectedLength) {
+    throw new Error("Snake path does not visit every grid coordinate.");
+  }
 }

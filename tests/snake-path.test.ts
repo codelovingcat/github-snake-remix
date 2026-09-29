@@ -34,7 +34,7 @@ test("uses three distinct route variants while keeping the same start", () => {
   assert.notDeepEqual(second, third);
 });
 
-test("keeps every route valid and covers every grid coordinate once", () => {
+test("keeps every route valid and covers every grid coordinate", () => {
   for (const seed of [0, 1, 2, 17, 12345]) {
     const path = planSnakePath(grid, seed);
 
@@ -51,6 +51,41 @@ test("keeps every route valid and covers every grid coordinate once", () => {
       );
     }
   }
+});
+
+test("the default horizontal route includes short one- or two-row detours", () => {
+  const path = planSnakePath(grid, 1);
+  const uniquePoints = new Set(path.map((point) => `${point.x}:${point.y}`));
+
+  assert.ok(path.length > 53 * 7);
+  assert.equal(uniquePoints.size, 53 * 7);
+
+  let foundDetour = false;
+
+  for (let index = 1; index < path.length - 2; index += 1) {
+    const first = path[index - 1];
+    const second = path[index];
+    const third = path[index + 1];
+    const fourth = path[index + 2];
+
+    if (
+      first &&
+      second &&
+      third &&
+      fourth &&
+      first.x === second.x &&
+      second.y !== first.y &&
+      second.y === third.y &&
+      third.x !== second.x &&
+      third.x === fourth.x &&
+      fourth.y !== third.y
+    ) {
+      foundDetour = true;
+      break;
+    }
+  }
+
+  assert.equal(foundDetour, true);
 });
 
 test("same seed always selects the same route", () => {
