@@ -136,7 +136,7 @@ function buildJitteredRowSnake(columns: number, rows: number, seed: number): Poi
 
     if (horizontal) {
       horizontalMoves += 1;
-      const interval = 5 + ((normalizedSeed + current.y) % 3);
+      const interval = 10 + ((normalizedSeed + current.y) % 3);
 
       if (horizontalMoves >= interval && appendDetour(current, next)) {
         horizontalMoves = 0;
