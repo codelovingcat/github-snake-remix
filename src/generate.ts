@@ -23,7 +23,7 @@ const timeline = createAnimationTimeline(grid, {
 });
 
 await renderAnimatedGif(timeline, grid.columns, grid.rows, outputPath, {
-  delayMilliseconds: 90,
+  delayMilliseconds: 200,
   repeat: 0,
   quality: 10,
   maxBytes: Number(process.env.SNAKE_MAX_BYTES ?? 1_500_000)
