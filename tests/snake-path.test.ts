@@ -155,7 +155,7 @@ test("natural detours are long enough to be visible and stay within the frame bu
       cursor += 1;
     }
 
-    if (horizontalMoves < 3 || cursor + verticalDepth >= path.length) {
+    if (horizontalMoves < 8 || cursor + verticalDepth >= path.length) {
       continue;
     }
 
