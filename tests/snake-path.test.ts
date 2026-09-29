@@ -89,6 +89,78 @@ test("the default horizontal route includes visible one- or two-row zigzags", ()
 });
 
 
+test("natural detours are long enough to be visible and stay within the frame budget", () => {
+  const path = planSnakePath(grid, 1);
+
+  assert.ok(path.length <= grid.columns * grid.rows * 2);
+
+  let foundNaturalDetour = false;
+
+  for (let index = 0; index < path.length - 5; index += 1) {
+    const start = path[index];
+    const firstVertical = path[index + 1];
+
+    if (
+      !start ||
+      !firstVertical ||
+      start.x !== firstVertical.x ||
+      start.y === firstVertical.y
+    ) {
+      continue;
+    }
+
+    let cursor = index + 1;
+    let verticalDepth = 0;
+
+    while (
+      cursor + 1 < path.length &&
+      path[cursor] &&
+      path[cursor + 1] &&
+      path[cursor].x === path[cursor + 1].x &&
+      path[cursor].y !== path[cursor + 1].y
+    ) {
+      verticalDepth += 1;
+      cursor += 1;
+    }
+
+    if (verticalDepth < 1 || verticalDepth > 2) {
+      continue;
+    }
+
+    let horizontalMoves = 0;
+
+    while (
+      cursor + 1 < path.length &&
+      path[cursor] &&
+      path[cursor + 1] &&
+      path[cursor].y === path[cursor + 1].y &&
+      path[cursor].x !== path[cursor + 1].x
+    ) {
+      horizontalMoves += 1;
+      cursor += 1;
+    }
+
+    if (horizontalMoves < 3 || cursor + verticalDepth >= path.length) {
+      continue;
+    }
+
+    const end = path[cursor];
+    const returnStep = path[cursor + 1];
+
+    if (
+      end &&
+      returnStep &&
+      end.x === returnStep.x &&
+      returnStep.y === start.y
+    ) {
+      foundNaturalDetour = true;
+      break;
+    }
+  }
+
+  assert.equal(foundNaturalDetour, true);
+});
+
 test("same seed always selects the same route", () => {
   const first = planSnakePath(grid, 42);
   const second = planSnakePath(grid, 42);
