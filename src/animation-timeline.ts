@@ -101,7 +101,10 @@ export function createAnimationTimeline(
       throw new Error("Snake path references a missing contribution cell.");
     }
 
-    if (cell.level > 0) {
+    const pointKey = `${point.x}:${point.y}`;
+    const alreadyConsumed = snake.state.consumed.has(pointKey);
+
+    if (cell.level > 0 && !alreadyConsumed) {
       // Hold the current frame briefly, then consume and grow without blinking.
       extendLastFrameDelay(COMMIT_WAIT_FRAMES * duration);
 
