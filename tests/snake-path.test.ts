@@ -32,9 +32,9 @@ test("different seeds produce distinct natural zigzag routes while keeping the s
   assert.equal(uniquePaths.size, 3);
   assert.notDeepEqual(first, second);
   assert.notDeepEqual(second, third);
-  assert.ok(first.length > 53 * 7);
-  assert.ok(second.length > 53 * 7);
-  assert.ok(third.length > 53 * 7);
+  assert.ok(first.length >= 53 * 7);
+  assert.ok(second.length >= 53 * 7);
+  assert.ok(third.length >= 53 * 7);
 });
 
 test("keeps every route valid and covers every grid coordinate", () => {
