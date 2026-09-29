@@ -61,7 +61,7 @@ function buildJitteredRowSnake(columns: number, rows: number, seed: number): Poi
   const path: Point[] = [];
   let baseIndex = 0;
   let horizontalRun = 0;
-  let nextDetourAfter = 8 + Math.floor(random() * 6);
+  let nextDetourAfter = 5 + Math.floor(random() * 6);
 
   const first = basePath[0];
   if (!first) {
@@ -102,7 +102,7 @@ function buildJitteredRowSnake(columns: number, rows: number, seed: number): Poi
         const detour = verticalCandidates[Math.floor(random() * verticalCandidates.length)];
 
         if (detour && maxSpan >= 3) {
-          const span = Math.min(5 + Math.floor(random() * 4), maxSpan);
+          const span = Math.min(4 + Math.floor(random() * 5), maxSpan);
           const targetY = current.y + detour.verticalDirection * detour.depth;
           const targetX = current.x + direction * span;
 
@@ -129,7 +129,7 @@ function buildJitteredRowSnake(columns: number, rows: number, seed: number): Poi
 
           baseIndex += span;
           horizontalRun = 0;
-          nextDetourAfter = 8 + Math.floor(random() * 6);
+          nextDetourAfter = 5 + Math.floor(random() * 6);
           continue;
         }
       }
