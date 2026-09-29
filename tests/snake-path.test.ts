@@ -156,14 +156,33 @@ test("natural detours are long enough to be visible and stay within the frame bu
       continue;
     }
 
-    const end = path[cursor];
-    const returnStep = path[cursor + 1];
+    let returnCursor = cursor;
+    let returnMoves = 0;
+
+    while (returnMoves < verticalDepth && returnCursor + 1 < path.length) {
+      const current = path[returnCursor];
+      const next = path[returnCursor + 1];
+
+      if (
+        !current ||
+        !next ||
+        current.x !== next.x ||
+        current.y === next.y
+      ) {
+        break;
+      }
+
+      returnMoves += 1;
+      returnCursor += 1;
+    }
+
+    const returnEnd = path[returnCursor];
 
     if (
-      end &&
-      returnStep &&
-      end.x === returnStep.x &&
-      returnStep.y === start.y
+      returnMoves === verticalDepth &&
+      returnEnd &&
+      returnEnd.x === path[cursor]?.x &&
+      returnEnd.y === start.y
     ) {
       foundNaturalDetour = true;
       break;
