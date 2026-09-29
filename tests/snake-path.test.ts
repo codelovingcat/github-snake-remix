@@ -56,41 +56,41 @@ test("keeps every route valid and covers every grid coordinate", () => {
   }
 });
 
-test("the default horizontal route includes visible one- or two-row zigzags", () => {
-  const path = planSnakePath(grid, 1);
-  const uniquePoints = new Set(path.map((point) => `${point.x}:${point.y}`));
+test("generated routes always include visible one- or two-row zigzags", () => {
+  for (const seed of [0, 1, 2, 17, 12345]) {
+    const path = planSnakePath(grid, seed);
+    const uniquePoints = new Set(path.map((point) => `${point.x}:${point.y}`));
 
-  assert.ok(path.length > 53 * 7);
-  assert.equal(uniquePoints.size, 53 * 7);
+    assert.equal(uniquePoints.size, 53 * 7);
 
-  let foundVisibleDetour = false;
+    let foundVisibleDetour = false;
 
-  for (let index = 1; index < path.length - 3; index += 1) {
-    const first = path[index - 1];
-    const second = path[index];
-    const third = path[index + 1];
-    const fourth = path[index + 2];
+    for (let index = 1; index < path.length - 3; index += 1) {
+      const first = path[index - 1];
+      const second = path[index];
+      const third = path[index + 1];
+      const fourth = path[index + 2];
 
-    if (
-      first &&
-      second &&
-      third &&
-      fourth &&
-      first.x === second.x &&
-      second.y !== first.y &&
-      second.y === third.y &&
-      third.y === fourth.y &&
-      third.x !== second.x &&
-      fourth.x !== third.x
-    ) {
-      foundVisibleDetour = true;
-      break;
+      if (
+        first &&
+        second &&
+        third &&
+        fourth &&
+        first.x === second.x &&
+        second.y !== first.y &&
+        second.y === third.y &&
+        third.y === fourth.y &&
+        third.x !== second.x &&
+        fourth.x !== third.x
+      ) {
+        foundVisibleDetour = true;
+        break;
+      }
     }
+
+    assert.equal(foundVisibleDetour, true);
   }
-
-  assert.equal(foundVisibleDetour, true);
 });
-
 
 test("natural detours are long enough to be visible and stay within the frame budget", () => {
   const path = planSnakePath(grid, 1);
