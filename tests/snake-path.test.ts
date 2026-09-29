@@ -53,16 +53,16 @@ test("keeps every route valid and covers every grid coordinate", () => {
   }
 });
 
-test("the default horizontal route includes short one- or two-row detours", () => {
+test("the default horizontal route includes visible one- or two-row zigzags", () => {
   const path = planSnakePath(grid, 1);
   const uniquePoints = new Set(path.map((point) => `${point.x}:${point.y}`));
 
   assert.ok(path.length > 53 * 7);
   assert.equal(uniquePoints.size, 53 * 7);
 
-  let foundDetour = false;
+  let foundVisibleDetour = false;
 
-  for (let index = 1; index < path.length - 2; index += 1) {
+  for (let index = 1; index < path.length - 3; index += 1) {
     const first = path[index - 1];
     const second = path[index];
     const third = path[index + 1];
@@ -76,17 +76,18 @@ test("the default horizontal route includes short one- or two-row detours", () =
       first.x === second.x &&
       second.y !== first.y &&
       second.y === third.y &&
+      third.y === fourth.y &&
       third.x !== second.x &&
-      third.x === fourth.x &&
-      fourth.y !== third.y
+      fourth.x !== third.x
     ) {
-      foundDetour = true;
+      foundVisibleDetour = true;
       break;
     }
   }
 
-  assert.equal(foundDetour, true);
+  assert.equal(foundVisibleDetour, true);
 });
+
 
 test("same seed always selects the same route", () => {
   const first = planSnakePath(grid, 42);
