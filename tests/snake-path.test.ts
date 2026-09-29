@@ -112,13 +112,19 @@ test("natural detours are long enough to be visible and stay within the frame bu
     let cursor = index + 1;
     let verticalDepth = 0;
 
-    while (
-      cursor + 1 < path.length &&
-      path[cursor] &&
-      path[cursor + 1] &&
-      path[cursor].x === path[cursor + 1].x &&
-      path[cursor].y !== path[cursor + 1].y
-    ) {
+    while (cursor + 1 < path.length) {
+      const current = path[cursor];
+      const next = path[cursor + 1];
+
+      if (
+        !current ||
+        !next ||
+        current.x !== next.x ||
+        current.y === next.y
+      ) {
+        break;
+      }
+
       verticalDepth += 1;
       cursor += 1;
     }
@@ -129,13 +135,19 @@ test("natural detours are long enough to be visible and stay within the frame bu
 
     let horizontalMoves = 0;
 
-    while (
-      cursor + 1 < path.length &&
-      path[cursor] &&
-      path[cursor + 1] &&
-      path[cursor].y === path[cursor + 1].y &&
-      path[cursor].x !== path[cursor + 1].x
-    ) {
+    while (cursor + 1 < path.length) {
+      const current = path[cursor];
+      const next = path[cursor + 1];
+
+      if (
+        !current ||
+        !next ||
+        current.y !== next.y ||
+        current.x === next.x
+      ) {
+        break;
+      }
+
       horizontalMoves += 1;
       cursor += 1;
     }
