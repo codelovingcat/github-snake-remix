@@ -1,17 +1,23 @@
 import type { ContributionGrid } from "./contribution-grid.js";
 import { planSnakePath } from "./snake-path.js";
-import { SNAKE_COLOR_CYCLE, SnakeEngine, type SnakeState } from "./snake-engine.js";
+import { SnakeEngine, type SnakeState } from "./snake-engine.js";
 import type { Point } from "./domain.js";
 
-const HEART_LIFETIME_FRAMES = 9;
 const COMMIT_WAIT_FRAMES = 1;
 const FINALE_WAIT_FRAMES = 2;
-const FINALE_BLINK_FRAMES = 6;
-const FINALE_FRAMES_PER_COLOR = 2;
+export const FINALE_BLINK_FRAMES = 6;
+export const FINALE_PUFF_BURST_COUNT = 3;
+export const FINALE_PUFF_BURST_INTERVAL_FRAMES = 4;
+export const FINALE_PUFF_BURST_LIFETIME_FRAMES = 4;
+export const FINALE_EMPTY_GRID_FRAMES = 3;
+export const FINALE_FRAME_COUNT =
+  FINALE_BLINK_FRAMES +
+  (FINALE_PUFF_BURST_COUNT - 1) * FINALE_PUFF_BURST_INTERVAL_FRAMES +
+  FINALE_PUFF_BURST_LIFETIME_FRAMES +
+  FINALE_EMPTY_GRID_FRAMES;
 
-export interface HeartParticle {
-  readonly origin: Point;
-  readonly color: string;
+export interface PuffBurst {
+  readonly index: number;
   readonly age: number;
 }
 
@@ -20,16 +26,29 @@ export interface AnimationFrame {
   readonly elapsedMilliseconds: number;
   readonly state: SnakeState;
   readonly consumedDate?: string;
-  readonly hearts?: readonly HeartParticle[];
   readonly snakeVisible?: boolean;
-  readonly rainbowHeartColorIndex?: number;
-  readonly rainbowHeartAge?: number;
+  readonly puffBursts?: readonly PuffBurst[];
   readonly delayMilliseconds?: number;
 }
 
 export interface AnimationOptions {
   readonly frameDurationMilliseconds?: number;
   readonly pathSeed?: number;
+}
+
+/**
+ * Return the puff bursts which are active in a finale puff frame. Each burst
+ * starts a few frames after the previous one and expands while it disperses.
+ */
+export function getActivePuffBursts(puffFrameIndex: number): readonly PuffBurst[] {
+  if (!Number.isInteger(puffFrameIndex) || puffFrameIndex < 0) {
+    throw new Error("Puff frame index must be a non-negative integer.");
+  }
+
+  return Array.from({ length: FINALE_PUFF_BURST_COUNT }, (_, index) => index).flatMap((index) => {
+    const age = puffFrameIndex - index * FINALE_PUFF_BURST_INTERVAL_FRAMES;
+    return age >= 0 && age < FINALE_PUFF_BURST_LIFETIME_FRAMES ? [{ index, age }] : [];
+  });
 }
 
 export function createAnimationTimeline(
@@ -60,21 +79,13 @@ export function createAnimationTimeline(
     .filter((cell): cell is ContributionGrid["cells"][number] => cell !== undefined && cell.level > 0);
   const snake = new SnakeEngine(first, second, initialGridCells);
   const startIndex = second ? 2 : 1;
-  let hearts: HeartParticle[] = [];
   const frames: AnimationFrame[] = [];
-
-  const advanceHearts = (): void => {
-    hearts = hearts
-      .map((heart) => ({ ...heart, age: heart.age + 1 }))
-      .filter((heart) => heart.age < HEART_LIFETIME_FRAMES);
-  };
 
   const pushFrame = (overrides: Partial<AnimationFrame> = {}): void => {
     frames.push({
       index: frames.length,
       elapsedMilliseconds: frames.length * duration,
       state: snake.state,
-      hearts: hearts.map((heart) => ({ ...heart, origin: { ...heart.origin } })),
       ...overrides
     });
   };
@@ -90,7 +101,7 @@ export function createAnimationTimeline(
     };
   };
 
-  pushFrame({ hearts: [], snakeVisible: true });
+  pushFrame({ snakeVisible: true });
 
   for (let index = startIndex; index < path.length; index += 1) {
     const point = path[index];
@@ -113,15 +124,6 @@ export function createAnimationTimeline(
         throw new Error("Snake could not consume an adjacent contribution cell.");
       }
 
-      const state = snake.state;
-      if (state.segments[0]) {
-        hearts.push({
-          origin: { x: cell.x, y: cell.y },
-          color: state.segments[0].color,
-          age: 0
-        });
-      }
-
       pushFrame({
         consumedDate: cell.date,
         snakeVisible: true
@@ -129,29 +131,32 @@ export function createAnimationTimeline(
       continue;
     }
 
-    advanceHearts();
     snake.moveTo(point);
     pushFrame({ snakeVisible: true });
   }
 
-  // End-of-run celebration: blink three times, pause, then every snake segment
-  // cycles through every snake color while its heart grows and fades.
+  // End-of-run finale: hold the final state briefly, blink three times while
+  // every segment keeps its final color, puff away in three separate bursts,
+  // then leave the contribution grid alone for a short empty-grid beat.
   extendLastFrameDelay(FINALE_WAIT_FRAMES * duration);
 
   for (let blink = 0; blink < FINALE_BLINK_FRAMES; blink += 1) {
-    advanceHearts();
     pushFrame({ snakeVisible: blink % 2 === 1 });
   }
 
-  for (let colorIndex = 0; colorIndex < SNAKE_COLOR_CYCLE.length; colorIndex += 1) {
-    for (let age = 0; age < FINALE_FRAMES_PER_COLOR; age += 1) {
-      advanceHearts();
-      pushFrame({
-        snakeVisible: true,
-        rainbowHeartColorIndex: colorIndex,
-        rainbowHeartAge: age
-      });
-    }
+  const puffFrameCount =
+    (FINALE_PUFF_BURST_COUNT - 1) * FINALE_PUFF_BURST_INTERVAL_FRAMES +
+    FINALE_PUFF_BURST_LIFETIME_FRAMES;
+
+  for (let puffFrame = 0; puffFrame < puffFrameCount; puffFrame += 1) {
+    pushFrame({
+      snakeVisible: true,
+      puffBursts: getActivePuffBursts(puffFrame)
+    });
+  }
+
+  for (let emptyFrame = 0; emptyFrame < FINALE_EMPTY_GRID_FRAMES; emptyFrame += 1) {
+    pushFrame({ snakeVisible: false });
   }
 
   return frames;

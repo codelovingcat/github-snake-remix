@@ -42,6 +42,11 @@ Each growth advances the snake through a fixed, deterministic color cycle:
 
 The contribution level still belongs to the consumed cell; it does not control the snake color.
 
+When the route ends, the snake holds its final state, blinks three times in its
+final colors, disappears in three small light-colored puff bursts, and leaves the
+contribution grid and progress bar alone for a short empty-grid beat before the
+GIF loops. No hearts are drawn at any point.
+
 The background follows GitHub's dark visual style.
 
 ## Quality guards
