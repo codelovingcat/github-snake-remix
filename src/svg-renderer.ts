@@ -1,6 +1,6 @@
 import type { Cell, Point } from "./domain.js";
-import type { HeartParticle } from "./animation-timeline.js";
-import { SNAKE_COLOR_CYCLE, type SnakeState } from "./snake-engine.js";
+import type { PuffBurst } from "./animation-timeline.js";
+import type { SnakeState } from "./snake-engine.js";
 import { contributionColor } from "./colors.js";
 
 export interface SvgOptions {
@@ -8,18 +8,11 @@ export interface SvgOptions {
   readonly gap?: number;
   readonly background?: string;
   readonly snakeVisible?: boolean;
-  readonly rainbowHeartColorIndex?: number;
-  readonly rainbowHeartAge?: number;
+  readonly puffBursts?: readonly PuffBurst[];
 }
 
 export const DEFAULT_CELL_SIZE = 12;
 export const DEFAULT_GAP = 3;
-
-const HEART_RISE_PER_FRAME = 1.5;
-const HEART_OFFSET_FROM_CELL = 5;
-const HEART_BASE_SCALE = 0.75;
-const HEART_GROWTH_PER_FRAME = 0.08;
-const HEART_OPACITY = [1, 1, 0.98, 0.9, 0.78, 0.62, 0.45, 0.25, 0.1] as const;
 
 const PROGRESS_BAR_TOP_GAP = 6;
 const PROGRESS_BAR_HEIGHT = 8;
@@ -27,18 +20,44 @@ const PROGRESS_BAR_BOTTOM_GAP = 3;
 export const SVG_PROGRESS_EXTRA_HEIGHT =
   PROGRESS_BAR_TOP_GAP + PROGRESS_BAR_HEIGHT + PROGRESS_BAR_BOTTOM_GAP;
 
-const RAINBOW_HEART_OFFSET = 7;
-const RAINBOW_HEART_SCALE = 0.72;
-const RAINBOW_HEART_GROWTH = 0.24;
-const RAINBOW_HEART_OPACITY = [1, 0.55, 0] as const;
-const RAINBOW_HEART_RISE = 1.25;
+// Small, light-colored bubble rings which spread outward around the snake and
+// disperse over the lifetime of a puff burst. Bubbles are emitted from a few
+// anchors along the body so a long snake puffs instead of turning into fog.
+const PUFF_BUBBLE_COLORS = ["#e6edf3", "#7dd3fc"] as const;
+const PUFF_BUBBLE_DIRECTIONS = [
+  { x: -1, y: -1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: 1, y: 1 }
+] as const;
+const PUFF_ANCHOR_LIMIT = 5;
+const PUFF_BUBBLE_SPREAD_RATIO = 0.5;
+const PUFF_BUBBLE_SPREAD_PER_AGE = 2;
+const PUFF_BUBBLE_RADIUS_PER_AGE = [0.9, 1.3, 1.6, 1.4] as const;
+const PUFF_BUBBLE_OPACITY_PER_AGE = [0.95, 0.75, 0.55, 0.3] as const;
+const PUFF_BUBBLE_STROKE_WIDTH = 1;
+
+/**
+ * Pick the body anchors a puff burst is emitted from: the head is always
+ * included, and the remaining anchors are spread evenly along the body.
+ */
+export function getPuffAnchorIndices(segmentCount: number): readonly number[] {
+  if (!Number.isInteger(segmentCount) || segmentCount < 0) {
+    throw new Error("Segment count must be a non-negative integer.");
+  }
+
+  if (segmentCount <= PUFF_ANCHOR_LIMIT) {
+    return Array.from({ length: segmentCount }, (_, index) => index);
+  }
+
+  const lastIndex = segmentCount - 1;
+  return Array.from({ length: PUFF_ANCHOR_LIMIT }, (_, index) =>
+    Math.round((index * lastIndex) / (PUFF_ANCHOR_LIMIT - 1))
+  );
+}
 
 export function renderSvg(
   cells: readonly Cell[],
   snake: SnakeState,
   columns: number,
   rows: number,
-  hearts: readonly HeartParticle[] = [],
   options: SvgOptions = {}
 ): string {
   if (columns < 1 || rows < 1) {
@@ -51,6 +70,8 @@ export function renderSvg(
   const width = columns * (cellSize + gap) + gap;
   const gridHeight = rows * (cellSize + gap) + gap;
   const height = gridHeight + SVG_PROGRESS_EXTRA_HEIGHT;
+  const snakeVisible = options.snakeVisible !== false;
+  const scale = cellSize / DEFAULT_CELL_SIZE;
 
   const grid = cells.map((cell) => {
     const x = gap + cell.x * (cellSize + gap);
@@ -59,35 +80,59 @@ export function renderSvg(
     return `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="2" fill="${contributionColor(level)}"/>`;
   }).join("");
 
-  const snakeRects = options.snakeVisible === false
+  const segmentSizes = snake.segments.map(
+    (_segment, index) => cellSize * Math.max(0.28, 1 - index * 0.11)
+  );
+
+  const snakeRects = !snakeVisible
     ? ""
     : snake.segments.map((segment, index) => {
       const centerX = gap + segment.position.x * (cellSize + gap) + cellSize / 2;
       const centerY = gap + segment.position.y * (cellSize + gap) + cellSize / 2;
-      const sizeRatio = Math.max(0.28, 1 - index * 0.11);
-      const size = cellSize * sizeRatio;
+      const size = segmentSizes[index] ?? cellSize;
       const x = centerX - size / 2;
       const y = centerY - size / 2;
       const radius = Math.max(1.5, size * 0.2);
       return `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${size.toFixed(2)}" height="${size.toFixed(2)}" rx="${radius.toFixed(2)}" fill="${segment.color}"/>`;
     }).join("");
 
-  const heartRects = hearts.map((heart) => {
-    const centerX = gap + heart.origin.x * (cellSize + gap) + cellSize / 2;
-    const centerY = gap
-      + heart.origin.y * (cellSize + gap)
-      + cellSize / 2
-      - HEART_OFFSET_FROM_CELL
-      - heart.age * HEART_RISE_PER_FRAME;
-    const opacity = HEART_OPACITY[Math.min(heart.age, HEART_OPACITY.length - 1)] ?? 0;
-    const scale = (cellSize / 14) * (HEART_BASE_SCALE + heart.age * HEART_GROWTH_PER_FRAME);
+  const puffBubbles: string[] = [];
 
-    return [
-      `<path data-heart="true" d="M 0 7 C -10 0 -7 -8 0 -3 C 7 -8 10 0 0 7 Z" `,
-      `transform="translate(${centerX.toFixed(2)} ${centerY.toFixed(2)}) scale(${scale.toFixed(3)})" `,
-      `fill="${heart.color}" opacity="${opacity.toFixed(2)}"/>`
-    ].join("");
-  }).join("");
+  if (snakeVisible) {
+    for (const burst of options.puffBursts ?? []) {
+      const age = Math.max(0, Math.min(PUFF_BUBBLE_RADIUS_PER_AGE.length - 1, burst.age));
+      const bubbleRadius = (PUFF_BUBBLE_RADIUS_PER_AGE[age] ?? 1) * scale;
+      const bubbleOpacity = PUFF_BUBBLE_OPACITY_PER_AGE[age] ?? 0;
+      const strokeWidth = PUFF_BUBBLE_STROKE_WIDTH * scale;
+      // The last frame of a burst is sparse to suggest the bubbles dispersing.
+      const sparse = age === PUFF_BUBBLE_RADIUS_PER_AGE.length - 1;
+
+      for (const segmentIndex of getPuffAnchorIndices(snake.segments.length)) {
+        const segment = snake.segments[segmentIndex];
+        if (!segment) continue;
+
+        const centerX = gap + segment.position.x * (cellSize + gap) + cellSize / 2;
+        const centerY = gap + segment.position.y * (cellSize + gap) + cellSize / 2;
+        const segmentRadius = (segmentSizes[segmentIndex] ?? cellSize) / 2;
+        const spread =
+          Math.round(segmentRadius * PUFF_BUBBLE_SPREAD_RATIO) +
+          age * PUFF_BUBBLE_SPREAD_PER_AGE;
+
+        PUFF_BUBBLE_DIRECTIONS.forEach((direction, directionIndex) => {
+          if (sparse && directionIndex % 2 === 1) return;
+
+          const color =
+            PUFF_BUBBLE_COLORS[(directionIndex + age) % PUFF_BUBBLE_COLORS.length] ?? "#e6edf3";
+          const bubbleX = centerX + direction.x * spread;
+          const bubbleY = centerY + direction.y * spread;
+
+          puffBubbles.push(
+            `<circle data-puff="true" cx="${bubbleX.toFixed(2)}" cy="${bubbleY.toFixed(2)}" r="${bubbleRadius.toFixed(2)}" fill="none" stroke="${color}" stroke-width="${strokeWidth.toFixed(2)}" opacity="${bubbleOpacity.toFixed(2)}"/>`
+          );
+        });
+      }
+    }
+  }
 
   const totalContributions = cells.filter((cell) => cell.level > 0).length;
   const consumedContributions = cells.filter(
@@ -103,37 +148,13 @@ export function renderSvg(
     ? 0
     : Math.max(4, progressBarWidth * progress);
 
-  const rainbowHeartRects = options.snakeVisible === false || options.rainbowHeartColorIndex === undefined
-    ? ""
-    : snake.segments.map((segment, index) => {
-      const colorIndex =
-        (options.rainbowHeartColorIndex! + index) % SNAKE_COLOR_CYCLE.length;
-      const color = SNAKE_COLOR_CYCLE[colorIndex] ?? SNAKE_COLOR_CYCLE[0];
-      const age = Math.max(0, Math.min(2, options.rainbowHeartAge ?? 0));
-      const centerX = gap + segment.position.x * (cellSize + gap) + cellSize / 2;
-      const centerY = gap
-        + segment.position.y * (cellSize + gap)
-        + cellSize / 2
-        - RAINBOW_HEART_OFFSET
-        - age * RAINBOW_HEART_RISE;
-      const scale = (cellSize / 14) * (RAINBOW_HEART_SCALE + age * RAINBOW_HEART_GROWTH);
-      const opacity = RAINBOW_HEART_OPACITY[age] ?? 0;
-
-      return [
-        `<path data-rainbow-heart="true" d="M 0 7 C -10 0 -7 -8 0 -3 C 7 -8 10 0 0 7 Z" `,
-        `transform="translate(${centerX.toFixed(2)} ${centerY.toFixed(2)}) scale(${scale.toFixed(3)})" `,
-        `fill="${color}" opacity="${opacity.toFixed(2)}"/>`
-      ].join("");
-    }).join("");
-
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="GitHub contribution snake">`,
     `<defs><linearGradient id="progress-green" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#7ee787"/><stop offset="100%" stop-color="#006d32"/></linearGradient></defs>`,
     `<rect width="${width}" height="${height}" rx="8" fill="${background}"/>`,
     grid,
     snakeRects,
-    heartRects,
-    rainbowHeartRects,
+    puffBubbles.join(""),
     `<rect data-progress-fill="true" x="${progressBarX}" y="${progressBarY}" width="${progressFillWidth.toFixed(2)}" height="${PROGRESS_BAR_HEIGHT}" rx="0" fill="url(#progress-green)"/>`,
     "</svg>"
   ].join("");
