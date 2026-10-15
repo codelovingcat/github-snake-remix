@@ -1,7 +1,7 @@
 import { randomInt } from "node:crypto";
 import { GitHubGraphQlContributionProvider } from "./github-graphql.js";
 import { normalizeContributionCalendar } from "./contribution-grid.js";
-import { createAnimationTimeline } from "./animation-timeline.js";
+import { createAnimationTimeline, DEFAULT_FRAME_DURATION_MILLISECONDS } from "./animation-timeline.js";
 import { renderAnimatedGif } from "./gif-output.js";
 
 const token = process.env.CONTRIBUTION_TOKEN;
@@ -18,12 +18,12 @@ const configuredSeed = process.env.SNAKE_PATH_SEED;
 const pathSeed = configuredSeed ? Number(configuredSeed) : randomInt(0, 0x1_0000_0000);
 
 const timeline = createAnimationTimeline(grid, {
-  frameDurationMilliseconds: 200,
+  frameDurationMilliseconds: DEFAULT_FRAME_DURATION_MILLISECONDS,
   pathSeed
 });
 
 await renderAnimatedGif(timeline, grid.columns, grid.rows, outputPath, {
-  delayMilliseconds: 200,
+  delayMilliseconds: DEFAULT_FRAME_DURATION_MILLISECONDS,
   repeat: 0,
   quality: 10,
   maxBytes: Number(process.env.SNAKE_MAX_BYTES ?? 1_500_000)
