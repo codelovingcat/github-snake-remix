@@ -7,6 +7,7 @@ import type { Point } from "./domain.js";
 export const DEFAULT_FRAME_DURATION_MILLISECONDS = 100;
 
 const COMMIT_WAIT_FRAMES = 1;
+export const HEART_PARTICLE_LIFETIME_FRAMES = 6;
 const FINALE_WAIT_FRAMES = 2;
 export const FINALE_BLINK_FRAMES = 6;
 export const FINALE_PUFF_BURST_COUNT = 3;
@@ -24,6 +25,12 @@ export interface PuffBurst {
   readonly age: number;
 }
 
+export interface HeartParticle {
+  readonly position: Point;
+  readonly color: string;
+  readonly age: number;
+}
+
 export interface AnimationFrame {
   readonly index: number;
   readonly elapsedMilliseconds: number;
@@ -31,6 +38,7 @@ export interface AnimationFrame {
   readonly consumedDate?: string;
   readonly snakeVisible?: boolean;
   readonly puffBursts?: readonly PuffBurst[];
+  readonly hearts?: readonly HeartParticle[];
   readonly delayMilliseconds?: number;
 }
 
@@ -83,14 +91,32 @@ export function createAnimationTimeline(
   const snake = new SnakeEngine(first, second, initialGridCells);
   const startIndex = second ? 2 : 1;
   const frames: AnimationFrame[] = [];
+  const activeHearts: { position: Point; color: string; age: number }[] = [];
 
   const pushFrame = (overrides: Partial<AnimationFrame> = {}): void => {
     frames.push({
       index: frames.length,
       elapsedMilliseconds: frames.length * duration,
       state: snake.state,
+      ...(activeHearts.length > 0
+        ? { hearts: activeHearts.map((heart) => ({
+          position: { ...heart.position },
+          color: heart.color,
+          age: heart.age
+        })) }
+        : {}),
       ...overrides
     });
+
+    for (const heart of activeHearts) {
+      heart.age += 1;
+    }
+
+    for (let index = activeHearts.length - 1; index >= 0; index -= 1) {
+      if ((activeHearts[index]?.age ?? HEART_PARTICLE_LIFETIME_FRAMES) >= HEART_PARTICLE_LIFETIME_FRAMES) {
+        activeHearts.splice(index, 1);
+      }
+    }
   };
 
   const extendLastFrameDelay = (additionalMilliseconds: number): void => {
@@ -127,6 +153,17 @@ export function createAnimationTimeline(
         throw new Error("Snake could not consume an adjacent contribution cell.");
       }
 
+      const consumedHead = snake.state.segments[0];
+      if (!consumedHead) {
+        throw new Error("Snake head is missing after consuming a contribution cell.");
+      }
+
+      activeHearts.push({
+        position: { x: cell.x, y: cell.y },
+        color: consumedHead.color,
+        age: 0
+      });
+
       pushFrame({
         consumedDate: cell.date,
         snakeVisible: true
@@ -142,6 +179,8 @@ export function createAnimationTimeline(
   // every segment keeps its final color, puff away in three separate bursts,
   // then leave the contribution grid alone for a short empty-grid beat.
   extendLastFrameDelay(FINALE_WAIT_FRAMES * duration);
+  // Contribution hearts belong to the route, never to the three-puff finale.
+  activeHearts.length = 0;
 
   for (let blink = 0; blink < FINALE_BLINK_FRAMES; blink += 1) {
     pushFrame({ snakeVisible: blink % 2 === 1 });
