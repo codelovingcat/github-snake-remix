@@ -71,6 +71,9 @@ export async function renderAnimatedGif(
             snakeVisible: frame.snakeVisible !== false,
             ...(frame.puffBursts !== undefined && frame.puffBursts.length > 0
               ? { puffBursts: frame.puffBursts }
+              : {}),
+            ...(frame.hearts !== undefined && frame.hearts.length > 0
+              ? { hearts: frame.hearts }
               : {})
           };
 
