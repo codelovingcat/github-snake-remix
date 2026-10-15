@@ -53,7 +53,7 @@ test("renders a color-matched heart that rises, grows, and fades as it ages", ()
 
   assert.match(fresh, /data-heart="true" data-heart-age="0"/);
   assert.match(fresh, /fill="#f472b6" opacity="0.95"/);
-  assert.match(fresh, /transform="translate\\(9\\.00 9\\.00\\) scale\\(0\\.62\\)"/);
+  assert.ok(fresh.includes('transform="translate(9.00 9.00) scale(0.62)"'));
   assert.match(rising, /data-heart-age="2"/);
   assert.match(rising, /fill="#f472b6" opacity="0.58"/);
   assert.ok(heartY(rising) < heartY(fresh));
