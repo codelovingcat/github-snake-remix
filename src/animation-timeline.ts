@@ -175,6 +175,12 @@ export function createAnimationTimeline(
     pushFrame({ snakeVisible: true });
   }
 
+  // Let any last contribution hearts finish their short rise-and-fade animation
+  // while the snake rests at the end of its route, before beginning the finale.
+  while (activeHearts.length > 0) {
+    pushFrame({ snakeVisible: true });
+  }
+
   // End-of-run finale: hold the final state briefly, blink three times while
   // every segment keeps its final color, puff away in three separate bursts,
   // then leave the contribution grid alone for a short empty-grid beat.
