@@ -3,6 +3,7 @@ import path from "node:path";
 import { createWriteStream } from "node:fs";
 import GIFEncoder from "gif-encoder-2";
 import sharp from "sharp";
+import { DEFAULT_FRAME_DURATION_MILLISECONDS } from "./animation-timeline.js";
 import type { AnimationFrame } from "./animation-timeline.js";
 import type { ContributionGridCell } from "./contribution-grid.js";
 import { DEFAULT_CELL_SIZE, DEFAULT_GAP, renderSvg, SVG_PROGRESS_EXTRA_HEIGHT } from "./svg-renderer.js";
@@ -35,7 +36,7 @@ export async function renderAnimatedGif(
   const gap = DEFAULT_GAP;
   const width = options.width ?? columns * (cellSize + gap) + gap;
   const height = options.height ?? rows * (cellSize + gap) + gap + SVG_PROGRESS_EXTRA_HEIGHT;
-  const delay = options.delayMilliseconds ?? 90;
+  const delay = options.delayMilliseconds ?? DEFAULT_FRAME_DURATION_MILLISECONDS;
   const repeat = options.repeat ?? 0;
   const quality = options.quality ?? 10;
 
