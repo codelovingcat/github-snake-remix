@@ -46,7 +46,7 @@ test("renders a color-matched heart that rises, grows, and fades as it ages", ()
   const rising = renderHeart(2);
   const fading = renderHeart(5);
   const heartY = (svg: string): number => {
-    const match = svg.match(/data-heart="true"[^>]*transform="translate\\(9\\.00 ([\\d.-]+)\\) scale\\(/);
+    const match = svg.match(/data-heart="true"[^>]*transform="translate[(]9[.]00 ([\d.-]+)[)] scale[(]/);
     assert.ok(match);
     return Number(match[1]);
   };
