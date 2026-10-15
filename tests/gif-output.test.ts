@@ -179,18 +179,30 @@ test("keeps the finale in the GIF and clears the snake during the empty-grid bea
   assert.ok(colorDistance(pixelAt(frames.length - 1), hexToRgb("#161b22")) < 40);
 });
 
-test("no rendered animation frame contains heart markup", () => {
-  const heartMarkers = /data-heart|data-rainbow-heart|M 0 7 C -10 0 -7 -8 0 -3/;
+test("renders contribution hearts only during the route and preserves the puff finale", () => {
   const frames = createAnimationTimeline(finaleGrid, { frameDurationMilliseconds: 90, pathSeed: 1 });
+  const finaleStart = frames.length - FINALE_FRAME_COUNT;
   let puffFrames = 0;
+  let heartFrames = 0;
 
-  for (const frame of frames) {
+  for (const [index, frame] of frames.entries()) {
     const svg = renderSvg(finaleGrid.cells, frame.state, finaleGrid.columns, finaleGrid.rows, {
       snakeVisible: frame.snakeVisible !== false,
-      ...(frame.puffBursts !== undefined ? { puffBursts: frame.puffBursts } : {})
+      ...(frame.puffBursts !== undefined ? { puffBursts: frame.puffBursts } : {}),
+      ...(frame.hearts !== undefined && frame.hearts.length > 0 ? { hearts: frame.hearts } : {})
     });
+    const renderedHeartCount = (svg.match(/data-heart="true"/g) ?? []).length;
+    assert.equal(renderedHeartCount, frame.hearts?.length ?? 0);
 
-    assert.doesNotMatch(svg, heartMarkers);
+    if (index >= finaleStart) {
+      assert.equal(renderedHeartCount, 0);
+    } else if (renderedHeartCount > 0) {
+      heartFrames += 1;
+    }
+
+    if (frame.consumedDate !== undefined) {
+      assert.ok(frame.hearts?.some((heart) => heart.age === 0));
+    }
 
     if ((frame.puffBursts?.length ?? 0) > 0) {
       puffFrames += 1;
@@ -200,5 +212,6 @@ test("no rendered animation frame contains heart markup", () => {
     }
   }
 
+  assert.ok(heartFrames > 0);
   assert.ok(puffFrames > 0);
 });
