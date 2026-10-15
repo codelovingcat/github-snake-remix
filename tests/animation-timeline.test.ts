@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   DEFAULT_FRAME_DURATION_MILLISECONDS,
+  HEART_PARTICLE_LIFETIME_FRAMES,
   FINALE_BLINK_FRAMES,
   FINALE_EMPTY_GRID_FRAMES,
   FINALE_FRAME_COUNT,
@@ -119,28 +120,35 @@ test("the finale puffs away in three bursts and then leaves an empty-grid beat",
   );
 });
 
-test("the finale keeps the final segment colors and never creates hearts", () => {
+test("each consumed contribution emits one color-matched heart and the finale has none", () => {
   const frames = createAnimationTimeline(grid, { frameDurationMilliseconds: 80, pathSeed: 1 });
   const blinkStart = finaleStartIndex(frames);
+  const routeFrames = frames.slice(0, blinkStart);
   const finaleFrames = frames.slice(blinkStart);
   const finalColors = finaleFrames[0]?.state.segments.map((segment) => segment.color);
+  const consumedFrames = routeFrames.filter((frame) => frame.consumedDate !== undefined);
 
   assert.ok(finalColors);
   assert.ok(finalColors.length > 0);
+  assert.ok(consumedFrames.length > 0);
+  assert.equal(HEART_PARTICLE_LIFETIME_FRAMES, 6);
+
+  for (const frame of consumedFrames) {
+    const newlyCreated = (frame.hearts ?? []).filter((heart) => heart.age === 0);
+    const newHead = frame.state.segments[0];
+
+    assert.equal(newlyCreated.length, 1);
+    assert.ok(newHead);
+    assert.equal(newlyCreated[0]?.color, newHead.color);
+    assert.deepEqual(newlyCreated[0]?.position, newHead.position);
+  }
+
+  assert.ok(routeFrames.some((frame) => (frame.hearts?.length ?? 0) > 0));
+  assert.ok(finaleFrames.every((frame) => (frame.hearts?.length ?? 0) === 0));
   assert.deepEqual(
     finaleFrames.map((frame) => frame.state.segments.map((segment) => segment.color)),
     finaleFrames.map(() => finalColors)
   );
-
-  const forbidden = ["hearts", "rainbowHeartColorIndex", "rainbowHeartAge"];
-
-  for (const frame of frames) {
-    assert.deepEqual(
-      Object.keys(frame).filter((key) => forbidden.includes(key)),
-      []
-    );
-    assert.equal(Object.hasOwn(frame, "hearts"), false);
-  }
 });
 
 test("active puff bursts are reported per frame with a bounded age", () => {
