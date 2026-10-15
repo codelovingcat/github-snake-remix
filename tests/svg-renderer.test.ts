@@ -30,6 +30,38 @@ test("keeps the consumed contribution cell visible but clears its green color", 
   assert.doesNotMatch(svg, HEART_MARKERS);
 });
 
+test("renders a color-matched heart that rises, grows, and fades as it ages", () => {
+  const renderHeart = (age: number): string => renderSvg(
+    [{ x: 0, y: 0, level: 0 as const }],
+    {
+      segments: [{ position: { x: 0, y: 0 }, color: "#f472b6", level: 0 as const }],
+      consumed: new Set<string>()
+    },
+    1,
+    1,
+    { hearts: [{ position: { x: 0, y: 0 }, color: "#f472b6", age }] }
+  );
+
+  const fresh = renderHeart(0);
+  const rising = renderHeart(2);
+  const fading = renderHeart(5);
+  const heartY = (svg: string): number => {
+    const match = svg.match(/data-heart="true"[^>]*transform="translate[(]9[.]00 ([\d.-]+)[)] scale[(]/);
+    assert.ok(match);
+    return Number(match[1]);
+  };
+
+  assert.match(fresh, /data-heart="true" data-heart-age="0"/);
+  assert.match(fresh, /fill="#f472b6" opacity="0.95"/);
+  assert.ok(fresh.includes('transform="translate(9.00 9.00) scale(0.62)"'));
+  assert.match(rising, /data-heart-age="2"/);
+  assert.match(rising, /fill="#f472b6" opacity="0.58"/);
+  assert.ok(heartY(rising) < heartY(fresh));
+  assert.match(fading, /data-heart-age="5"/);
+  assert.match(fading, /fill="#f472b6" opacity="0.00"/);
+  assert.ok(heartY(fading) < heartY(rising));
+});
+
 test("draws no heart elements for a consumed contribution", () => {
   const svg = renderSvg(
     [{ x: 0, y: 0, level: 4 as const }],
