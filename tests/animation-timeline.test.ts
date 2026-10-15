@@ -144,6 +144,20 @@ test("each consumed contribution emits one color-matched heart and the finale ha
   }
 
   assert.ok(routeFrames.some((frame) => (frame.hearts?.length ?? 0) > 0));
+
+  const lastConsumption = consumedFrames.at(-1);
+  const lastBirth = lastConsumption?.hearts?.find((heart) => heart.age === 0);
+  assert.ok(lastBirth);
+  const lastHeartAges = routeFrames
+    .flatMap((frame) => frame.hearts ?? [])
+    .filter((heart) =>
+      heart.position.x === lastBirth.position.x &&
+      heart.position.y === lastBirth.position.y &&
+      heart.color === lastBirth.color
+    )
+    .map((heart) => heart.age);
+  assert.deepEqual(lastHeartAges, [0, 1, 2, 3, 4, 5]);
+
   assert.ok(finaleFrames.every((frame) => (frame.hearts?.length ?? 0) === 0));
   assert.deepEqual(
     finaleFrames.map((frame) => frame.state.segments.map((segment) => segment.color)),
