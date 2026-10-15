@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  DEFAULT_FRAME_DURATION_MILLISECONDS,
   FINALE_BLINK_FRAMES,
   FINALE_EMPTY_GRID_FRAMES,
   FINALE_FRAME_COUNT,
@@ -40,6 +41,16 @@ test("timeline is deterministic with explicit seed and always starts from the fi
   assert.equal(first[0]?.state.segments.length, 2);
   assert.equal(first[0]?.state.segments[1]?.position.x, 0);
   assert.equal(first[0]?.state.segments[1]?.position.y, 0);
+});
+
+test("default pacing uses the faster production frame cadence and a brief commit pause", () => {
+  const frames = createAnimationTimeline(grid, { pathSeed: 9 });
+  const consumedIndex = frames.findIndex((frame) => frame.consumedDate === "2026-09-21");
+
+  assert.equal(DEFAULT_FRAME_DURATION_MILLISECONDS, 100);
+  assert.equal(frames[1]?.elapsedMilliseconds, DEFAULT_FRAME_DURATION_MILLISECONDS);
+  assert.ok(consumedIndex > 0);
+  assert.equal(frames[consumedIndex - 1]?.delayMilliseconds, DEFAULT_FRAME_DURATION_MILLISECONDS * 2);
 });
 
 test("a consumed contribution pauses briefly, then grows without blinking", () => {
