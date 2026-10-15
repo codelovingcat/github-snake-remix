@@ -42,10 +42,15 @@ Each growth advances the snake through a fixed, deterministic color cycle:
 
 The contribution level still belongs to the consumed cell; it does not control the snake color.
 
-When the route ends, the snake holds its final state, blinks three times in its
-final colors, disappears in three small light-colored puff bursts, and leaves the
-contribution grid and progress bar alone for a short empty-grid beat before the
-GIF loops. No hearts are drawn at any point.
+Each consumed non-empty contribution cell emits a small heart in the new snake
+head's color. The heart floats upward, grows slightly, and fades out over a few
+frames without interrupting movement.
+
+When the route ends, any remaining contribution hearts finish their animation
+before the finale begins. The snake then holds its final state, blinks three times
+in its final colors, disappears in three small light-colored puff bursts, and
+leaves the contribution grid and progress bar alone for a short empty-grid beat
+before the GIF loops. Hearts do not appear during the finale.
 
 The background follows GitHub's dark visual style.
 
