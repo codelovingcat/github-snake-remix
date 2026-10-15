@@ -3,6 +3,9 @@ import { planSnakePath } from "./snake-path.js";
 import { SnakeEngine, type SnakeState } from "./snake-engine.js";
 import type { Point } from "./domain.js";
 
+/** Default frame cadence for a brisk, roughly 10 fps snake animation. */
+export const DEFAULT_FRAME_DURATION_MILLISECONDS = 100;
+
 const COMMIT_WAIT_FRAMES = 1;
 const FINALE_WAIT_FRAMES = 2;
 export const FINALE_BLINK_FRAMES = 6;
@@ -55,7 +58,7 @@ export function createAnimationTimeline(
   grid: ContributionGrid,
   options: AnimationOptions = {}
 ): readonly AnimationFrame[] {
-  const duration = options.frameDurationMilliseconds ?? 90;
+  const duration = options.frameDurationMilliseconds ?? DEFAULT_FRAME_DURATION_MILLISECONDS;
   if (!Number.isInteger(duration) || duration <= 0) {
     throw new Error("Frame duration must be a positive integer.");
   }
